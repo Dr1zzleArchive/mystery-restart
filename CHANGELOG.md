@@ -2,6 +2,12 @@
 
 最新的更新写在最上面。每条记录：日期、主要改动、涉及文件。
 
+## 2026-11-09 · 初始化 Git 仓库并部署到 GitHub（私有）
+
+- 新增 `.gitignore`：排除 `书原文/`、`archive/`、`assets/mascot/_archive/`，以及 `assets/audio/` 下的原始无损音频（约 1.88GB），仅保留网页实际加载的 `assets/audio/web/` 压缩 mp3。
+- 初始化 Git（分支 `main`），提交并推送到私有仓库 `github.com/Dr1zzleArchive/mystery-restart`。
+- 本次为发布准备与部署，不改网页功能。涉及文件：新增 `.gitignore`。
+
 ## 2026-11-09 · AI 调用增强：超时自动重试、提示词去重
 
 - `coach.js`：把单次请求超时从 20 秒收到 15 秒，并把"超时/网络异常"和"空回复"纳入同一套最多 3 次的自动重试；HTTP 类错误（如 Key 无效）仍立即报错、不重试。
