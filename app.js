@@ -77,7 +77,7 @@
     aiBase: "https://api.deepseek.com",
     aiKey: "",
     aiModel: "deepseek-chat",
-    proxyUrl: ""
+    proxyUrl: "https://1369344703-hs643kfgxn.ap-guangzhou.tencentscf.com"
   };
 
   const lastLine = {};
@@ -205,7 +205,7 @@
       if (typeof saved.aiBase === "string") settings.aiBase = saved.aiBase;
       if (typeof saved.aiKey === "string") settings.aiKey = saved.aiKey;
       if (typeof saved.aiModel === "string") settings.aiModel = saved.aiModel;
-      if (typeof saved.proxyUrl === "string") settings.proxyUrl = saved.proxyUrl;
+      if (typeof saved.proxyUrl === "string" && saved.proxyUrl.trim()) settings.proxyUrl = saved.proxyUrl.trim();
     } catch (e) {
       // Local file mode can disable storage in some browsers.
     }
