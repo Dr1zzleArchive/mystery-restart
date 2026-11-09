@@ -115,25 +115,33 @@
     return !/^[\u2026\u3002.\u22ef\u30fb\uff5e~]+$/.test(s);
   }
 
-  async function postOnce(base, key, model, messages) {
+  function requestBody(model, messages) {
+    return JSON.stringify({
+      model: model,
+      messages: messages,
+      temperature: 0.2,
+      max_tokens: 350,
+      response_format: { type: "json_object" },
+      stream: false
+    });
+  }
+
+  async function postOnce(config, messages) {
+    const proxyUrl = config && config.proxyUrl ? String(config.proxyUrl).trim() : "";
+    const base = (config && config.base ? config.base : "https://api.deepseek.com").replace(/\/+$/, "");
+    const url = proxyUrl || (base + "/chat/completions");
+    const headers = { "Content-Type": "application/json" };
+    if (!proxyUrl) headers["Authorization"] = "Bearer " + (config && config.key ? config.key : "");
+    const body = requestBody(config && config.model ? config.model : "deepseek-chat", messages);
+
     const controller = new AbortController();
     const timer = setTimeout(function () { controller.abort(); }, 15000);
     let res;
     try {
-      res = await fetch(base + "/chat/completions", {
+      res = await fetch(url, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": "Bearer " + key
-        },
-        body: JSON.stringify({
-          model: model,
-          messages: messages,
-          temperature: 0.2,
-          max_tokens: 350,
-          response_format: { type: "json_object" },
-          stream: false
-        }),
+        headers: headers,
+        body: body,
         signal: controller.signal
       });
     } catch (e) {
@@ -154,15 +162,14 @@
   }
 
   async function ask(config, messages) {
-    const base = (config && config.base ? config.base : "https://api.deepseek.com").replace(/\/+$/, "");
+    const proxyUrl = config && config.proxyUrl ? String(config.proxyUrl).trim() : "";
     const key = config && config.key ? config.key : "";
-    const model = config && config.model ? config.model : "deepseek-chat";
-    if (!key) throw new Error("未配置 AI API Key。请先在设置里填写。");
+    if (!proxyUrl && !key) throw new Error("未配置 AI API Key 或代理地址。请先在设置里填写。");
 
     let last = { reply: "", feedbackType: "neutral", unlockedDeductionIds: [], auditNote: "" };
     for (let attempt = 0; attempt < 3; attempt++) {
       try {
-        last = await postOnce(base, key, model, messages);
+        last = await postOnce(config, messages);
       } catch (err) {
         if (!err.http && attempt < 2) {
           await sleep(500 * (attempt + 1));

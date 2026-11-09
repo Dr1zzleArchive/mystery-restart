@@ -2,6 +2,13 @@
 
 最新的更新写在最上面。每条记录：日期、主要改动、涉及文件。
 
+## 2026-11-09 · 仓库公开 + 开启 GitHub Pages；新增腾讯云函数代理支持
+
+- 仓库转为公开，并开启 GitHub Pages：`https://dr1zzlearchive.github.io/mystery-restart/`。
+- 新增 `proxy/tencent-scf/`：腾讯云函数（SCF）代理代码 `index.js` 与搭建步骤 `README.md`，用于在服务端保存 DeepSeek Key。
+- 前端新增「代理地址（可选）」设置：填了代理地址就改走代理、不再使用前端 Key；未填则维持原直连方式。
+- 涉及文件：新增 `proxy/tencent-scf/`；修改 `index.html`、`app.js`、`coach.js`。
+
 ## 2026-11-09 · 初始化 Git 仓库并部署到 GitHub（私有）
 
 - 新增 `.gitignore`：排除 `书原文/`、`archive/`、`assets/mascot/_archive/`，以及 `assets/audio/` 下的原始无损音频（约 1.88GB），仅保留网页实际加载的 `assets/audio/web/` 压缩 mp3。

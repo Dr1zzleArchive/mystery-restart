@@ -227,7 +227,11 @@
           <label for="aiModel">模型名</label>
           <input id="aiModel" type="text" data-setting="aiModel" placeholder="deepseek-chat" autocomplete="off" />
         </div>
-        <p class="settings-hint">沉浸模式需要调用大模型。Key 只保存在当前浏览器中，正式公开前建议改用代理。</p>
+        <div class="settings-group">
+          <label for="proxyUrl">代理地址（可选）</label>
+          <input id="proxyUrl" type="text" data-setting="proxyUrl" placeholder="https://你的腾讯云函数地址" autocomplete="off" />
+        </div>
+        <p class="settings-hint">填了代理地址后，请求会走代理（Key 放在服务端），前端可以不填 Key。</p>
       </div>
       <div class="settings-group settings-reset">
         <button id="resetProgress" class="btn small reset-progress" type="button" data-action="reset-progress">重置所有进度</button>

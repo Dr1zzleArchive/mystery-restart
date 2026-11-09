@@ -76,7 +76,8 @@
     background: "",
     aiBase: "https://api.deepseek.com",
     aiKey: "",
-    aiModel: "deepseek-chat"
+    aiModel: "deepseek-chat",
+    proxyUrl: ""
   };
 
   const lastLine = {};
@@ -204,6 +205,7 @@
       if (typeof saved.aiBase === "string") settings.aiBase = saved.aiBase;
       if (typeof saved.aiKey === "string") settings.aiKey = saved.aiKey;
       if (typeof saved.aiModel === "string") settings.aiModel = saved.aiModel;
+      if (typeof saved.proxyUrl === "string") settings.proxyUrl = saved.proxyUrl;
     } catch (e) {
       // Local file mode can disable storage in some browsers.
     }
@@ -327,9 +329,11 @@
     const aiBase = document.getElementById("aiBase");
     const aiKey = document.getElementById("aiKey");
     const aiModel = document.getElementById("aiModel");
+    const proxyUrl = document.getElementById("proxyUrl");
     if (aiBase) aiBase.value = settings.aiBase;
     if (aiKey) aiKey.value = settings.aiKey;
     if (aiModel) aiModel.value = settings.aiModel;
+    if (proxyUrl) proxyUrl.value = settings.proxyUrl;
     window.Achievements.configure({ sound: settings.achSound });
     window.Dialogue.configure({
       speed: settings.textSpeed,
@@ -755,7 +759,7 @@
       state.statedDeductions,
       text
     );
-    window.Coach.ask({ base: settings.aiBase, key: settings.aiKey, model: settings.aiModel }, messages)
+    window.Coach.ask({ base: settings.aiBase, key: settings.aiKey, model: settings.aiModel, proxyUrl: settings.proxyUrl }, messages)
       .then(handleImmerseReply)
       .catch(function (err) {
         aiBusy = false;
