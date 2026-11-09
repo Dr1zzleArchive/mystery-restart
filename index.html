@@ -1,0 +1,268 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>谜案重启 | 文学推理</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div id="illustrationBackground" class="illustration-background" aria-hidden="true"></div>
+  <button id="homeTrigger" class="home-trigger" type="button" data-action="menu" aria-label="返回主菜单" title="返回主菜单" hidden>
+    <span aria-hidden="true">←</span>
+    <span class="home-trigger-text">主菜单</span>
+  </button>
+  <button class="settings-trigger" type="button" data-action="settings" aria-label="打开设置" title="设置">⚙</button>
+  <button id="achToggle" class="ach-trigger" type="button" aria-expanded="false" title="成就">
+    <span aria-hidden="true">🏆</span>
+    <span id="achCount" class="ach-trigger-count">0/0</span>
+  </button>
+  <div class="bgm-control">
+    <button id="bgmToggle" class="bgm-trigger" type="button" aria-label="背景音乐" aria-expanded="false" aria-controls="bgmPanel" title="背景音乐">
+      <span class="bgm-icon" aria-hidden="true">♪</span>
+      <span class="bgm-bars" aria-hidden="true"><i></i><i></i><i></i></span>
+    </button>
+    <div id="bgmPanel" class="bgm-panel" role="group" aria-label="背景音乐播放器" hidden>
+      <div class="bgm-row">
+        <strong>背景音乐</strong>
+        <label class="bgm-switch" title="一键开关背景音乐">
+          <input id="bgmEnabled" type="checkbox" />
+          <span class="bgm-switch-track" aria-hidden="true"></span>
+          <span class="sr-only">开启背景音乐</span>
+        </label>
+      </div>
+      <div class="bgm-player">
+        <div class="bgm-now">
+          <strong id="bgmTitle"></strong>
+          <span id="bgmArtist"></span>
+        </div>
+        <input id="bgmSeek" class="bgm-seek" type="range" min="0" max="1000" step="1" value="0" aria-label="播放进度" />
+        <div class="bgm-time"><span id="bgmCurrent">0:00</span><span id="bgmDuration">0:00</span></div>
+        <div class="bgm-buttons">
+          <button id="bgmMode" class="bgm-btn small" type="button"></button>
+          <button id="bgmPrev" class="bgm-btn" type="button" aria-label="上一首" title="上一首">⏮</button>
+          <button id="bgmPlay" class="bgm-btn main" type="button" aria-label="播放" title="播放">▶</button>
+          <button id="bgmNext" class="bgm-btn" type="button" aria-label="下一首" title="下一首">⏭</button>
+          <button id="bgmMute" class="bgm-btn small" type="button" aria-label="静音" title="静音">🔊</button>
+        </div>
+        <div class="bgm-volume">
+          <label class="bgm-field" for="bgmVolume">音量</label>
+          <input id="bgmVolume" type="range" min="0" max="100" step="1" value="40" />
+          <span id="bgmVolumeLabel" class="bgm-field">40%</span>
+        </div>
+        <div class="bgm-library">
+          <div id="bgmTabs" class="bgm-tabs" role="tablist" aria-label="专辑与歌单"></div>
+          <form id="bgmForm" class="bgm-form" hidden>
+            <input id="bgmFormInput" type="text" maxlength="20" autocomplete="off" aria-label="歌单名称" />
+            <button type="submit" class="bgm-chip">确定</button>
+            <button id="bgmFormCancel" type="button" class="bgm-chip">取消</button>
+          </form>
+          <div class="bgm-album-head">
+            <div>
+              <strong id="bgmAlbumName"></strong>
+              <small id="bgmAlbumDesc"></small>
+            </div>
+            <div id="bgmAlbumActions" class="bgm-album-actions"></div>
+          </div>
+          <ol id="bgmList" class="bgm-list" aria-label="当前专辑曲目"></ol>
+        </div>
+      </div>
+      <p id="bgmStatus" class="bgm-status" aria-live="polite"></p>
+    </div>
+  </div>
+  <div class="layout">
+    <aside class="guide-panel" aria-label="引路人">
+      <div class="guide-card">
+        <div class="guide-title">
+          <span class="guide-kicker">引路人</span>
+          <strong>灰羽</strong>
+        </div>
+        <button class="guide-portrait" type="button" data-action="mascot" aria-label="和引路人互动">
+          <img id="guideFullbody" class="guide-fullbody" alt="灰发眼镜少女引路人全身像" src="assets/mascot/cutout/fullbody_idle.png" onerror="this.onerror=null;this.src='assets/mascot/guide_fullbody.png';" />
+        </button>
+      </div>
+      <div class="dialogue">
+        <img id="mascotImg" class="dialogue-face" alt="引路人当前表情" src="assets/mascot/cutout/portrait_idle.png" />
+        <p id="guideBubble" aria-live="polite">先选一个案子。别紧张，推理错了也不是不能重来。</p>
+      </div>
+    </aside>
+    <main class="stage" id="app"></main>
+  </div>
+  <button id="nbToggle" class="nb-tab" type="button" aria-expanded="false" aria-controls="notebook" title="侦探笔记">
+    <span class="nb-tab-icon" aria-hidden="true">✎</span>
+    <span class="nb-tab-text">笔记</span>
+    <span id="nbCount" class="nb-count" hidden></span>
+  </button>
+  <aside id="notebook" class="notebook" aria-label="侦探笔记" hidden>
+    <header class="nb-head">
+      <div>
+        <strong>侦探笔记</strong>
+        <small id="nbCase"></small>
+      </div>
+      <button type="button" class="icon-button" data-nb="close" aria-label="关闭笔记" title="关闭">×</button>
+    </header>
+    <div class="nb-compose">
+      <textarea id="nbInput" rows="3" placeholder="记下线索、疑点、谁在说谎……" aria-label="新笔记"></textarea>
+      <div class="nb-row">
+        <button id="nbQuote" type="button" class="nb-btn" data-nb="quote" title="把对话框里当前这句台词引用进来">引用当前台词</button>
+        <span>
+          <span class="nb-meta">Ctrl+Enter</span>
+          <button type="button" class="nb-btn primary" data-nb="add">记下</button>
+        </span>
+      </div>
+    </div>
+    <div class="nb-row nb-toolbar">
+      <span id="nbFilter" class="nb-filter" role="group" aria-label="显示范围">
+        <button type="button" class="nb-chip" data-nb-filter="case">本案</button>
+        <button type="button" class="nb-chip" data-nb-filter="all">全部</button>
+      </span>
+      <span>
+        <button type="button" class="nb-btn" data-nb="export" title="导出全部笔记为文本文件">导出</button>
+        <button type="button" class="nb-btn danger" data-nb="clear" title="删除本案全部笔记">清空本案</button>
+      </span>
+    </div>
+    <ol id="nbList" class="nb-list"></ol>
+    <div id="nbToast" class="nb-toast" role="status" hidden></div>
+    <p class="nb-foot">笔记自动保存在当前浏览器中。</p>
+  </aside>
+  <section id="welcomeScreen" class="welcome-screen" aria-labelledby="welcomeTitle" hidden>
+    <div class="welcome-backdrop"></div>
+    <div class="welcome-content">
+      <p class="welcome-kicker">文学推理体验</p>
+      <h1 id="welcomeTitle">欢迎来到谜案重启</h1>
+      <p class="welcome-lede">让灰羽带你从一本书开始，进入一场可以亲自作答的推理故事。</p>
+      <div class="welcome-guide-wrap">
+        <div class="welcome-halo"></div>
+        <img id="welcomeGuide" class="welcome-guide" src="assets/mascot/cutout/fullbody_idle.png" alt="灰羽全身像" />
+      </div>
+      <div class="welcome-dialogue" role="status">
+        <img src="assets/mascot/cutout/portrait_idle.png" alt="" />
+        <div>
+          <strong>灰羽</strong>
+          <p id="welcomeLine">你好，我是灰羽。接下来，我会把文学作品拆成一场可以亲自参与的推理游戏。</p>
+        </div>
+      </div>
+      <div class="welcome-actions">
+        <button class="btn primary welcome-start" type="button" data-action="welcome-continue">开始体验</button>
+        <button class="welcome-skip" type="button" data-action="welcome-continue">跳过介绍</button>
+      </div>
+    </div>
+  </section>
+  <section id="settingsPanel" class="settings-overlay" aria-labelledby="settingsTitle" hidden>
+    <div class="settings-backdrop" data-action="close-settings"></div>
+    <div class="settings-dialog" role="dialog" aria-modal="true">
+      <div class="settings-header">
+        <div>
+          <p class="eyebrow">偏好设置</p>
+          <h2 id="settingsTitle">阅读与显示</h2>
+        </div>
+        <button class="icon-button" type="button" data-action="close-settings" aria-label="关闭设置" title="关闭">×</button>
+      </div>
+      <div class="settings-group">
+        <label for="uiSize">文字与界面大小</label>
+        <select id="uiSize" data-setting="uiSize">
+          <option value="small">小</option>
+          <option value="normal">标准</option>
+          <option value="large">大</option>
+        </select>
+      </div>
+      <div class="settings-group">
+        <label for="fontStyle">字体</label>
+        <select id="fontStyle" data-setting="fontStyle">
+          <option value="sans">现代无衬线</option>
+          <option value="serif">阅读衬线体</option>
+          <option value="mono">档案等宽体</option>
+        </select>
+      </div>
+      <div class="settings-group">
+        <label for="textSpeed">对白速度</label>
+        <select id="textSpeed" data-setting="textSpeed">
+          <option value="slow">慢</option>
+          <option value="normal">标准</option>
+          <option value="fast">快</option>
+          <option value="instant">立即显示</option>
+        </select>
+      </div>
+      <fieldset class="settings-group settings-sound">
+        <legend class="settings-label">对白音效</legend>
+        <div class="settings-inline">
+          <label for="voiceToggle">逐字弹出时播放音效</label>
+          <input id="voiceToggle" type="checkbox" data-setting="voice" />
+        </div>
+        <div class="settings-row">
+          <select id="voiceStyle" data-setting="voiceStyle" aria-label="音效样式"></select>
+          <button type="button" class="btn small" data-action="voice-preview">试听</button>
+        </div>
+        <div class="settings-range">
+          <label for="voiceVolume">音量</label>
+          <input id="voiceVolume" type="range" min="0" max="100" step="5" data-setting="voiceVolume" />
+          <span id="voiceVolumeLabel">60%</span>
+        </div>
+      </fieldset>
+      <div class="settings-group settings-inline">
+        <label for="achSound">成就解锁提示音</label>
+        <input id="achSound" type="checkbox" data-setting="achSound" />
+      </div>
+      <div class="settings-group">
+        <span class="settings-label">背景</span>
+        <div class="theme-options" role="radiogroup" aria-label="背景主题">
+          <button class="theme-swatch" type="button" data-theme-choice="ink" aria-label="墨夜" title="墨夜"><span></span></button>
+          <button class="theme-swatch" type="button" data-theme-choice="paper" aria-label="纸页" title="纸页"><span></span></button>
+          <button class="theme-swatch" type="button" data-theme-choice="blue" aria-label="雾蓝" title="雾蓝"><span></span></button>
+          <button class="theme-swatch" type="button" data-theme-choice="sepia" aria-label="旧案卷" title="旧案卷"><span></span></button>
+        </div>
+        <button id="backgroundGalleryOpen" class="btn small background-gallery-open" type="button" data-action="background-gallery">灰羽插画背景 <span id="backgroundUnlockCount"></span></button>
+      </div>
+      <div class="settings-group">
+        <span class="settings-label">沉浸模式（AI）</span>
+        <div class="settings-group">
+          <label for="aiBase">接口地址</label>
+          <input id="aiBase" type="text" data-setting="aiBase" placeholder="https://api.deepseek.com" autocomplete="off" />
+        </div>
+        <div class="settings-group">
+          <label for="aiKey">API Key</label>
+          <input id="aiKey" type="password" data-setting="aiKey" placeholder="sk-..." autocomplete="off" />
+        </div>
+        <div class="settings-group">
+          <label for="aiModel">模型名</label>
+          <input id="aiModel" type="text" data-setting="aiModel" placeholder="deepseek-chat" autocomplete="off" />
+        </div>
+        <p class="settings-hint">沉浸模式需要调用大模型。Key 只保存在当前浏览器中，正式公开前建议改用代理。</p>
+      </div>
+      <div class="settings-group settings-reset">
+        <button id="resetProgress" class="btn small reset-progress" type="button" data-action="reset-progress">重置所有进度</button>
+        <p class="settings-hint">清除游戏进度、成就、笔记本，恢复初始状态。设置保留。</p>
+      </div>
+      <p class="settings-note">设置会自动保存在当前浏览器中。</p>
+    </div>
+  </section>
+  <section id="backgroundGallery" class="settings-overlay background-gallery" aria-labelledby="backgroundGalleryTitle" hidden>
+    <div class="settings-backdrop" data-action="close-background-gallery"></div>
+    <div class="settings-dialog background-gallery-dialog" role="dialog" aria-modal="true">
+      <div class="settings-header">
+        <div>
+          <p class="eyebrow">引路人收藏</p>
+          <h2 id="backgroundGalleryTitle">灰羽插画背景</h2>
+        </div>
+        <button class="icon-button" type="button" data-action="close-background-gallery" aria-label="关闭背景图库" title="关闭">×</button>
+      </div>
+      <p class="background-gallery-intro">完成成就与案件，逐步解锁灰羽的个人插画。已解锁的背景可随时切换。</p>
+      <div id="backgroundGrid" class="background-grid"></div>
+      <button id="backgroundReset" class="btn background-reset" type="button" data-action="background-none">不使用插画背景</button>
+    </div>
+    <div id="backgroundViewer" class="background-viewer" data-action="close-background-viewer" hidden>
+      <img alt="灰羽插画预览" />
+      <p>点击任意处关闭预览</p>
+    </div>
+  </section>
+  <script src="data.js"></script>
+  <script src="judge.js"></script>
+  <script src="dialogue.js"></script>
+  <script src="mascot.js"></script>
+  <script src="achievements.js"></script>
+  <script src="coach.js"></script>
+  <script src="app.js"></script>
+  <script src="notebook.js"></script>
+  <script src="bgm.js"></script>
+</body>
+</html>

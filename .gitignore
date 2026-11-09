@@ -1,0 +1,11 @@
+# 内部/版权材料：不随仓库发布
+/书原文/
+/archive/
+
+# 旧版抠图与调试素材
+/assets/mascot/_archive/
+
+# 原始无损音频体积巨大；网页实际加载 assets/audio/web/ 下的压缩 mp3
+/assets/audio/*
+!/assets/audio/web/
+!/assets/audio/web/**

@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>本子检查工具 | 谜案重启</title>
+  <style>
+    :root { --bg: #14151b; --panel: #242735; --panel-2: #2d3040; --border: #3b4054; --text: #f1f0eb; --muted: #a7a9b6; --accent: #d7b76a; --ok: #72c38b; --warn: #e2b04a; --bad: #df7979; }
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 32px; font-family: "Segoe UI", "Microsoft YaHei", sans-serif; color: var(--text); background: var(--bg); }
+    main { max-width: 1000px; margin: 0 auto; }
+    h1 { margin: 0 0 6px; }
+    h2 { margin: 28px 0 10px; color: var(--accent); font-size: 18px; }
+    p { color: var(--muted); line-height: 1.7; }
+    textarea, input, select { width: 100%; padding: 10px; color: var(--text); font: 13px/1.5 Consolas, "Microsoft YaHei", monospace; border: 1px solid var(--border); border-radius: 6px; background: var(--panel); }
+    textarea { min-height: 260px; resize: vertical; }
+    button { margin-top: 10px; margin-right: 8px; padding: 9px 18px; color: #17130a; font: inherit; font-weight: 700; border: 0; border-radius: 6px; background: var(--accent); cursor: pointer; }
+    button.ghost { color: var(--text); font-weight: 400; border: 1px solid var(--border); background: var(--panel-2); }
+    .summary { padding: 14px 16px; border: 1px solid var(--border); border-radius: 8px; background: var(--panel); }
+    ul { margin: 0; padding: 0; list-style: none; }
+    li { margin: 6px 0; padding: 8px 12px; border-left: 3px solid var(--border); border-radius: 4px; background: var(--panel); font-size: 14px; line-height: 1.6; }
+    li.error { border-color: var(--bad); }
+    li.warn { border-color: var(--warn); }
+    li.ok { border-color: var(--ok); }
+    li b { margin-right: 8px; }
+    li.error b { color: var(--bad); }
+    li.warn b { color: var(--warn); }
+    li.ok b { color: var(--ok); }
+    .row { display: grid; grid-template-columns: 1fr 2fr auto; gap: 8px; align-items: end; }
+    .row button { margin: 0; }
+    .verdict { margin-top: 10px; font-size: 15px; }
+    .stats { display: flex; flex-wrap: wrap; gap: 8px 18px; margin-top: 8px; color: var(--muted); font-size: 13px; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>本子检查工具</h1>
+  <p>把 AI 生成的本子 JSON 粘贴到下面，点“检查”。工具会检查格式是否正确、线索能否拿到、每道题的依据是否都在游戏里出现，并给出文本量统计。红色是必须修改的错误，黄色是建议处理的警告。</p>
+
+  <textarea id="input" spellcheck="false" placeholder='{ "id": "xxx_01", "title": "...", ... }'></textarea>
+  <button id="run" type="button">检查</button>
+  <button id="sample" class="ghost" type="button">载入示例（巴斯克维尔的猎犬）</button>
+
+  <div id="out" hidden>
+    <h2>结果</h2>
+    <div class="summary" id="summary"></div>
+    <ul id="list"></ul>
+
+    <h2>试判答案</h2>
+    <p>选择一道题，输入玩家可能写的答案，看困难模式会怎么判。可以试试同义词、错别字、整句话，或把所有嫌疑人都写上。</p>
+    <div class="row">
+      <select id="tryQ"></select>
+      <input id="tryInput" type="text" placeholder="输入一个答案" />
+      <button id="tryBtn" type="button">判定</button>
+    </div>
+    <div class="verdict" id="tryOut"></div>
+  </div>
+</main>
+
+<script src="../../judge.js"></script>
+<script src="../../data.js"></script>
+<script>
+(function () {
+  "use strict";
+  const $ = function (id) { return document.getElementById(id); };
+  const POSES = ["idle", "thinking", "investigate", "unimpressed"];
+  const VOICES = ["guide", "high", "mid", "low", null];
+  let current = null;
+
+  function esc(v) { return String(v).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+  function len(t) { return Array.from(t || "").length; }
+
+  // Accept raw JSON, or a pasted JS object (e.g. copied from data.js) as a fallback.
+  function parse(text) {
+    const trimmed = text.trim().replace(/^```(json|js)?/, "").replace(/```$/, "").trim().replace(/,\s*$/, "");
+    try { return JSON.parse(trimmed); } catch (e) {
+      try { return Function('"use strict"; return (' + trimmed + ");")(); } catch (e2) { throw e; }
+    }
+  }
+
+  function validate(s) {
+    const out = [];
+    const err = function (m) { out.push(["error", m]); };
+    const warn = function (m) { out.push(["warn", m]); };
+    const ok = function (m) { out.push(["ok", m]); };
+
+    ["id", "title", "subtitle", "source", "summary", "victim", "solution"].forEach(function (k) {
+      if (!s[k] || typeof s[k] !== "string") err("缺少字段 " + k + "（字符串）");
+    });
+    ["speakers", "scenes"].forEach(function (k) { if (!s[k] || typeof s[k] !== "object") err("缺少字段 " + k + "（对象）"); });
+    ["characters", "clues", "actions", "questions"].forEach(function (k) { if (!Array.isArray(s[k])) err("缺少字段 " + k + "（数组）"); });
+    if (out.some(function (x) { return x[0] === "error"; })) return out;
+
+    const speakers = s.speakers;
+    Object.keys(speakers).forEach(function (k) {
+      if (VOICES.indexOf(speakers[k].voice === undefined ? null : speakers[k].voice) < 0) warn("说话人 " + k + " 的 voice 应为 guide / high / mid / low / null");
+    });
+    if (!speakers.guide) warn("speakers 里没有 guide（灰羽）");
+
+    function dupes(list, label) {
+      const seen = {};
+      list.forEach(function (x) {
+        if (!x.id) err(label + " 中有条目缺少 id");
+        else if (seen[x.id]) err(label + " 编号重复：" + x.id);
+        seen[x.id] = true;
+      });
+    }
+    dupes(s.characters, "characters");
+    dupes(s.clues, "clues");
+    dupes(s.actions, "actions");
+    dupes(s.questions, "questions");
+
+    const charIds = s.characters.map(function (c) { return c.id; });
+    const clueIds = s.clues.map(function (c) { return c.id; });
+
+    function checkLines(lines, where) {
+      if (!Array.isArray(lines) || !lines.length) { err(where + " 没有台词"); return; }
+      lines.forEach(function (l, i) {
+        if (!l || !l.t) err(where + "[" + i + "] 缺少台词文字 t");
+        if (!speakers[l.s]) err(where + "[" + i + "] 的说话人 “" + l.s + "” 不在 speakers 里");
+        if (l.pose && POSES.indexOf(l.pose) < 0) warn(where + "[" + i + "] 的 pose 应为 " + POSES.join(" / "));
+        if (len(l.t) > 50) warn(where + "[" + i + "] 有 " + len(l.t) + " 字，建议拆成 40 字以内的短句");
+      });
+    }
+    ["intro", "deduce", "truth"].forEach(function (k) { checkLines(s.scenes[k], "scenes." + k); });
+
+    s.characters.forEach(function (c) {
+      ["name", "title", "motive", "alibi"].forEach(function (k) { if (!c[k]) warn("嫌疑人 " + c.id + " 缺少 " + k); });
+      if (!c.aliases || !c.aliases.length) warn("嫌疑人 " + c.id + "（" + c.name + "）没有 aliases，困难模式可能误判其他译名");
+    });
+    s.clues.forEach(function (c) {
+      if (!c.name || !c.text) err("线索 " + c.id + " 缺少 name 或 text");
+      if (len(c.name) > 8) warn("线索 " + c.id + " 的名字偏长（" + len(c.name) + " 字），选择题里会显得拥挤");
+    });
+
+    const obtainable = {};
+    s.actions.forEach(function (a) {
+      if (a.type !== "talk" && a.type !== "search") err("行动 " + a.id + " 的 type 应为 talk 或 search");
+      if (!a.label) err("行动 " + a.id + " 缺少 label");
+      (a.clueIds || []).forEach(function (k) {
+        if (clueIds.indexOf(k) < 0) err("行动 " + a.id + " 给出的线索 " + k + " 不存在");
+        obtainable[k] = true;
+      });
+      checkLines(a.lines, "actions." + a.id + ".lines");
+    });
+    s.clues.forEach(function (c) { if (!obtainable[c.id]) err("线索 " + c.id + "（" + c.name + "）在任何行动中都拿不到"); });
+
+    s.questions.forEach(function (q) {
+      const where = "题目 " + q.id;
+      if (!q.prompt) err(where + " 缺少 prompt");
+      if (q.kind !== "character" && q.kind !== "clue") err(where + " 的 kind 应为 character 或 clue");
+      const pool = q.kind === "character" ? charIds : clueIds;
+      if (!q.choice || !Array.isArray(q.choice.options)) err(where + " 缺少 choice.options");
+      else {
+        q.choice.options.forEach(function (o) { if (pool.indexOf(o) < 0) err(where + " 的选项 " + o + " 不存在"); });
+        if (q.choice.options.indexOf(q.choice.answer) < 0) err(where + " 的正确答案 " + q.choice.answer + " 不在选项里");
+        if (q.choice.options.length < 3) warn(where + " 只有 " + q.choice.options.length + " 个选项，建议 3–4 个");
+      }
+      if (!q.fill || !q.fill.answers || !q.fill.answers[0] || !q.fill.answers[0].text) err(where + " 缺少填空答案 fill.answers[0].text");
+      else {
+        const a = q.fill.answers[0];
+        if (q.fill.sentence && q.fill.sentence.indexOf("{{0}}") < 0) err(where + " 的 sentence 里没有 {{0}} 空位");
+        if (len(a.text) > 8) warn(where + " 的标准答案有 " + len(a.text) + " 字，填空建议是 2–6 字的关键词");
+        if (!a.aliases || a.aliases.length < 2) warn(where + " 的别名少于 2 个，玩家换个说法可能被判错");
+        if (q.kind === "character") {
+          const target = s.characters.find(function (c) { return c.id === q.choice.answer; });
+          if (target && window.Judge.check(target.name, a, []) !== "correct") warn(where + " 的填空答案和选择题答案（" + target.name + "）对不上");
+        }
+      }
+      if (!q.basedOn || !q.basedOn.length) warn(where + " 没有写 basedOn，无法检查证据链");
+      (q.basedOn || []).forEach(function (k) {
+        if (clueIds.indexOf(k) < 0) err(where + " 依据的线索 " + k + " 不存在");
+        else if (!obtainable[k]) err(where + " 依据的线索 " + k + " 在调查中拿不到");
+      });
+      if (q.kind === "clue" && q.choice && clueIds.indexOf(q.choice.answer) >= 0 && !obtainable[q.choice.answer]) {
+        err(where + " 的正确选项 " + q.choice.answer + " 在调查中拿不到，简单模式无法选择");
+      }
+    });
+
+    const hasCulprit = s.questions.some(function (q) { return q.kind === "character"; });
+    if (!hasCulprit) warn("没有“凶手是谁”类（kind 为 character）的题目");
+    if (s.questions.length < 4) warn("推理题只有 " + s.questions.length + " 道，建议 4–6 道");
+    if (s.clues.length < 6) warn("线索只有 " + s.clues.length + " 条，建议 8–12 条");
+    if (s.actions.length < 6) warn("调查行动只有 " + s.actions.length + " 个，建议 7–10 个");
+
+    if (!out.some(function (x) { return x[0] !== "ok"; })) ok("没有发现问题。记得再人工通读一遍。");
+    return out;
+  }
+
+  function stats(s) {
+    const scenes = s.scenes || {};
+    const lines = [].concat(scenes.intro || [], scenes.deduce || [], scenes.truth || []);
+    (s.actions || []).forEach(function (a) { lines.push.apply(lines, a.lines || []); });
+    const chars = lines.reduce(function (n, l) { return n + len(l.t); }, 0);
+    return [
+      "台词 " + lines.length + " 句",
+      "约 " + chars + " 字",
+      "预计阅读 " + Math.max(1, Math.round(chars / 250)) + " 分钟（不含推理）",
+      "嫌疑人 " + (s.characters || []).length,
+      "线索 " + (s.clues || []).length,
+      "行动 " + (s.actions || []).length,
+      "推理题 " + (s.questions || []).length
+    ];
+  }
+
+  function run() {
+    let s;
+    try {
+      s = parse($("input").value);
+    } catch (e) {
+      show([["error", "JSON 解析失败：" + e.message + "。常见原因：多余的逗号、中文引号、缺少括号。"]], null);
+      return;
+    }
+    if (Array.isArray(s)) s = s[0];
+    current = s;
+    show(validate(s), s);
+  }
+
+  function show(results, s) {
+    $("out").hidden = false;
+    const errors = results.filter(function (r) { return r[0] === "error"; }).length;
+    const warns = results.filter(function (r) { return r[0] === "warn"; }).length;
+    $("summary").innerHTML = "<strong>" + (s ? esc(s.title || s.id || "未命名") : "无法读取") + "</strong>：" +
+      (errors ? errors + " 个错误，" : "没有错误，") + warns + " 个警告" +
+      (s ? '<div class="stats">' + stats(s).map(function (x) { return "<span>" + esc(x) + "</span>"; }).join("") + "</div>" : "");
+    $("list").innerHTML = results.map(function (r) {
+      const label = { error: "错误", warn: "警告", ok: "通过" }[r[0]];
+      return '<li class="' + r[0] + '"><b>' + label + "</b>" + esc(r[1]) + "</li>";
+    }).join("");
+    $("tryQ").innerHTML = s && Array.isArray(s.questions) ? s.questions.map(function (q, i) {
+      return '<option value="' + i + '">' + esc(q.id + "：" + q.prompt) + "</option>";
+    }).join("") : "";
+    $("tryOut").textContent = "";
+  }
+
+  function tryJudge() {
+    if (!current) return;
+    const q = current.questions[Number($("tryQ").value)];
+    if (!q || !q.fill) return;
+    let forbidden = [];
+    if (q.kind === "character") {
+      forbidden = current.characters.filter(function (c) { return c.id !== q.choice.answer; }).reduce(function (all, c) {
+        return all.concat([c.name], c.aliases || []);
+      }, []);
+    }
+    const verdict = window.Judge.check($("tryInput").value, q.fill.answers[0], forbidden);
+    const text = { correct: "✓ 判为正确", close: "△ 判为“很接近”（提示检查错字，不扣机会）", wrong: "× 判为错误", empty: "（空输入）" }[verdict];
+    const color = { correct: "var(--ok)", close: "var(--warn)", wrong: "var(--bad)", empty: "var(--muted)" }[verdict];
+    $("tryOut").innerHTML = '<span style="color:' + color + '">' + text + "</span>　标准答案：" + esc(q.fill.answers[0].text);
+  }
+
+  $("run").addEventListener("click", run);
+  $("tryBtn").addEventListener("click", tryJudge);
+  $("tryInput").addEventListener("keydown", function (e) { if (e.key === "Enter") tryJudge(); });
+  $("sample").addEventListener("click", function () {
+    $("input").value = JSON.stringify(window.SCRIPTS[0], null, 2);
+    run();
+  });
+})();
+</script>
+</body>
+</html>
