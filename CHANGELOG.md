@@ -2,6 +2,13 @@
 
 最新的更新写在最上面。每条记录：日期、主要改动、涉及文件。
 
+## 2026-11-09 · 线上站接入腾讯云函数代理
+
+- 验证腾讯云函数 `https://1369344703-hs643kfgxn.ap-guangzhou.tencentscf.com`：HTTP 200、CORS 正常、DeepSeek 回复正常。
+- `app.js` 将该地址设为默认代理；线上访客无需填写 API Key，沉浸模式直接走代理。
+- 本地已保存的空代理地址不再覆盖默认值，只有手动填了非空地址才会覆盖。
+- 涉及文件：`app.js`。
+
 ## 2026-11-09 · 仓库公开 + 开启 GitHub Pages；新增腾讯云函数代理支持
 
 - 仓库转为公开，并开启 GitHub Pages：`https://dr1zzlearchive.github.io/mystery-restart/`。
