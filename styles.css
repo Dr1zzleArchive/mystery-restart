@@ -2785,6 +2785,9 @@ body.tutorial-mode .guide-panel {
   gap: 12px;
   pointer-events: none;
   max-width: 34vw;
+  left: 40vw;
+  top: 18vh;
+  transition: left .45s cubic-bezier(.22, .61, .36, 1), top .45s cubic-bezier(.22, .61, .36, 1);
 }
 
 .tutorial-guide img {
