@@ -85,7 +85,7 @@
   // enabled = master switch; paused = the user pressed pause (music stays "on" but silent).
   // viewId = album shown in the list; queueId = album the playing track belongs to.
   const prefs = {
-    enabled: true, paused: false, trackId: TRACKS[0].id, volume: 0.4, muted: false, mode: "list",
+    enabled: false, paused: false, trackId: TRACKS[0].id, volume: 0.4, muted: false, mode: "list",
     viewId: "all", queueId: "all"
   };
   let playlists = [];
