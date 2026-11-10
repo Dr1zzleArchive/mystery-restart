@@ -2782,14 +2782,14 @@ body.tutorial-mode .guide-panel {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
   pointer-events: none;
-  max-width: 220px;
+  max-width: 34vw;
 }
 
 .tutorial-guide img {
-  width: 130px;
-  max-height: 42vh;
+  width: clamp(160px, 26vw, 340px);
+  max-height: 62vh;
   object-fit: contain;
 }
 
@@ -2798,10 +2798,10 @@ body.tutorial-mode .guide-panel {
   background: color-mix(in srgb, var(--panel) 94%, transparent);
   border: 1px solid var(--border);
   border-radius: 12px;
-  padding: 10px 12px;
+  padding: 14px 18px;
   color: var(--text);
-  font-size: 15px;
-  line-height: 1.6;
+  font-size: clamp(16px, 1.8vw, 24px);
+  line-height: 1.7;
   box-shadow: var(--shadow);
 }
 

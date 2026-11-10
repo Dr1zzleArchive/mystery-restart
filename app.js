@@ -90,6 +90,7 @@
   let mascotClickTimer = null;
   let welcomeTimer = null;
   let aiBusy = false;
+  let lastTutorialAnchor = null;
 
   const welcomeLines = [
     "你好，我是灰羽。接下来，由我带你把文学作品变成一场推理游戏。",
@@ -561,6 +562,12 @@
     if (tutorialGuide) tutorialGuide.hidden = true;
   }
 
+  function tutorialAnchor(step) {
+    if (step && step.hint && step.hint.length) return "hint:" + step.hint.join("|");
+    if (step && step.panel) return "panel:" + step.panel;
+    return "default";
+  }
+
   function tutorialTarget(step) {
     if (step && step.hint && step.hint.length) {
       const el = document.querySelector(step.hint[0]);
@@ -576,8 +583,8 @@
     const r = target.getBoundingClientRect();
     const vw = window.innerWidth;
     const vh = window.innerHeight;
-    const gW = 220;
-    const gH = 260;
+    const gW = Math.min(420, vw * 0.36);
+    const gH = Math.min(560, vh * 0.72);
     const rightSide = (r.left + r.width / 2) > vw / 2;
     let left = rightSide ? (r.left - gW - 14) : (r.right + 14);
     let top = r.top + r.height / 2 - gH / 2;
@@ -594,6 +601,7 @@
     state.tutorialStep = 0;
     state.scriptId = TUTORIAL_CASE_ID;
     resetCase();
+    lastTutorialAnchor = null;
     showTutorialGuide();
     setPhase("tutorial");
   }
@@ -601,6 +609,7 @@
   function finishTutorial() {
     try { localStorage.setItem(TUTORIAL_KEY, "1"); } catch (e) { /* ignore */ }
     clearTutorialHints();
+    lastTutorialAnchor = null;
     hideTutorialGuide();
     state.scriptId = null;
     resetCase();
@@ -681,7 +690,11 @@
         '<button class="btn primary" type="button" data-action="tutorial-next">继续</button>' +
         '<button class="btn" type="button" data-action="tutorial-skip">跳过教程</button>' +
       '</div>';
-    positionTutorialGuide(step);
+    const anchor = tutorialAnchor(step);
+    if (anchor !== lastTutorialAnchor) {
+      lastTutorialAnchor = anchor;
+      positionTutorialGuide(step);
+    }
   }
 
   function renderMenu() {
