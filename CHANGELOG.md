@@ -2,6 +2,12 @@
 
 最新的更新写在最上面。每条记录：日期、主要改动、涉及文件。
 
+## 2026-11-10 · 修复悬浮的教程引导元素始终显示
+
+- 根因：`.tutorial-guide` 的 `display:flex` 覆盖了 `hidden` 属性，导致 `#tutorialGuide` 即使被禁用也一直悬浮显示（含未加载的灰羽立绘图片）。
+- 增加 `.tutorial-guide[hidden] { display:none; }`，使其默认隐藏。
+- 涉及文件：`styles.css`。
+
 ## 2026-11-10 · 修复线上同步失效：部署时给 JS/CSS 加版本号
 
 - 根因：GitHub Pages 的 CDN（Fastly）按 URL 路径缓存约 10 分钟，且会忽略查询参数，导致每次更新后新旧文件混着返回、网页报错；本地打开没有 CDN，所以正常。

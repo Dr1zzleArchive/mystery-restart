@@ -2790,6 +2790,10 @@ body.tutorial-mode .guide-panel {
   transition: left .45s cubic-bezier(.22, .61, .36, 1), top .45s cubic-bezier(.22, .61, .36, 1);
 }
 
+.tutorial-guide[hidden] {
+  display: none;
+}
+
 .tutorial-guide img {
   width: clamp(160px, 26vw, 340px);
   height: clamp(200px, 42vh, 460px);
