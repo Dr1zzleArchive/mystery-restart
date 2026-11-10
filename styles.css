@@ -2654,32 +2654,39 @@ body.notebook-open .bgm-control { right: 408px; }
 .closing-slot {
   display: inline-block;
   min-width: 7em;
-  padding: 2px 8px;
+  padding: 3px 10px;
   margin: 0 2px;
-  color: var(--accent);
-  background: transparent;
-  border: none;
-  border-bottom: 2px dashed var(--accent);
+  color: var(--muted);
+  background: color-mix(in srgb, var(--panel-2) 45%, transparent);
+  border: 1px dashed color-mix(in srgb, var(--accent) 60%, var(--border));
+  border-radius: 6px;
   font: inherit;
   cursor: pointer;
   text-align: center;
+  transition: border-color .15s, background .15s, color .15s;
+}
+
+.closing-slot:hover {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, var(--panel-2));
 }
 
 .closing-slot.filled {
   color: var(--text);
-  border-bottom-style: solid;
-  background: color-mix(in srgb, var(--accent) 12%, transparent);
-  border-radius: 4px;
+  border-style: solid;
+  border-color: var(--accent-2);
+  background: color-mix(in srgb, var(--accent-2) 14%, var(--panel-2));
+  font-weight: 600;
 }
 
 .closing-slot.correct {
   color: var(--ok);
-  border-bottom-color: var(--ok);
+  border-color: var(--ok);
 }
 
 .closing-slot.wrong {
   color: var(--danger);
-  border-bottom-color: var(--danger);
+  border-color: var(--danger);
 }
 
 .closing-tray-label {
@@ -2700,15 +2707,24 @@ body.notebook-open .bgm-control { right: 408px; }
   border-radius: 8px;
   font: inherit;
   cursor: grab;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, .14);
+  transition: transform .12s ease, border-color .12s ease, box-shadow .12s ease;
 }
 
 .closing-frag:hover {
   border-color: var(--accent);
+  transform: translateY(-1px);
+}
+
+.closing-frag:active {
+  cursor: grabbing;
+  transform: translateY(0);
 }
 
 .closing-frag.selected {
   border-color: var(--accent);
   background: color-mix(in srgb, var(--accent) 18%, var(--panel-2));
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 35%, transparent);
 }
 
 .closing-unknown {
@@ -2718,4 +2734,47 @@ body.notebook-open .bgm-control { right: 408px; }
   border: 1px dashed var(--border);
   border-radius: 8px;
   user-select: none;
+}
+
+.closing-reveal {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  background: radial-gradient(circle at center, transparent 30%, rgba(0, 0, 0, .38) 100%);
+}
+
+.closing-reveal-text {
+  position: relative;
+  font-size: clamp(3rem, 12vw, 7rem);
+  letter-spacing: .18em;
+  color: var(--accent);
+  text-shadow: 0 0 34px color-mix(in srgb, var(--accent) 60%, transparent);
+  animation: closingRevealText 1.9s ease both;
+}
+
+.closing-reveal-glow {
+  position: absolute;
+  width: 62vmin;
+  height: 62vmin;
+  border-radius: 50%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--accent) 42%, transparent), transparent 70%);
+  filter: blur(2px);
+  animation: closingRevealGlow 1.9s ease both;
+}
+
+@keyframes closingRevealText {
+  0% { opacity: 0; transform: scale(.72) translateY(16px); filter: blur(8px); }
+  30% { opacity: 1; transform: scale(1.06) translateY(0); filter: blur(0); }
+  72% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.08); filter: blur(4px); }
+}
+
+@keyframes closingRevealGlow {
+  0% { opacity: 0; transform: scale(.45); }
+  40% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.28); }
 }

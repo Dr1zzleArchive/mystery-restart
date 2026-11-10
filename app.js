@@ -762,7 +762,7 @@
     if (!c) return;
     const allFilled = c.slots.every(function (slot) { return state.closingPlaced[slot.id]; });
     if (!allFilled) {
-      guide("还有空没填。把所有文字块都放进去，再检查。", "thinking", "thinking");
+      guide("还有空没填。把所有线索都放进去，再检查。", "thinking", "thinking");
       return;
     }
     const ok = c.slots.every(function (slot) { return state.closingPlaced[slot.id] === slot.answer; });
@@ -772,11 +772,23 @@
       savedCompleted.add(s.id);
       window.Achievements.unlock("first_case");
       save();
-      setPhase("closing");
+      showRevealAnimation(function () { setPhase("closing"); });
     } else {
       renderClosing();
-      guide("有几处还不对。没关系，换一下文字块再试一次。", "unimpressed", "unimpressed");
+      guide("有几处还不对。没关系，换一下线索再试一次。", "unimpressed", "unimpressed");
     }
+  }
+
+  function showRevealAnimation(done) {
+    const reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const el = document.createElement("div");
+    el.className = "closing-reveal";
+    el.innerHTML = '<div class="closing-reveal-glow"></div><div class="closing-reveal-text">拨云见日</div>';
+    document.body.appendChild(el);
+    window.setTimeout(function () {
+      el.remove();
+      if (done) done();
+    }, reduced ? 600 : 1900);
   }
 
   function submitImmerse() {
