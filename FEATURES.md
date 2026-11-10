@@ -51,6 +51,7 @@ data.js → judge.js → dialogue.js → mascot.js → achievements.js → app.j
 | `hound_01` | 巴斯克维尔的猎犬 | 入门·第一案 | 已上线，4 嫌疑人/9 线索/9 行动/5 题 |
 | `letter_01` | 失窃的信 | 入门·第二案 | 已上线，2 角色/8 线索/8 行动/3 题 |
 | `sxy_01` | 珊瑚扇坠 | 入门·第三案 | 已上线，4 人物/8 线索/7 行动/5 题（三侠五义） |
+| `cell13_01` | 第13号牢房 | 入门·第四案 | 已上线，5 人物/10 线索/10 行动/5 题（The Problem of Cell 13） |
 
 案子对应的策划文档在 `archive/Case_Database/`（见下方"文学关卡素材库"），一个策划文档可能对应一个已上线案子，也可能还没写成 `data.js` 里的本子。**两边状态可能不同步**——改动任一边后记得检查另一边，并更新 `archive/Case_Index/master_case_index.md` 的"开发状态"列。
 
