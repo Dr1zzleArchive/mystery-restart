@@ -6,6 +6,7 @@
   const STORAGE_KEY = "murder_restart_save_v3";
   const SETTINGS_KEY = "murder_restart_settings_v1";
   const WELCOME_KEY = "murder_restart_welcome_seen_v1";
+  const TUTORIAL_KEY = "murder_restart_tutorial_done_v1";
 
   const app = document.getElementById("app");
   const mascotImg = document.getElementById("mascotImg");
@@ -52,7 +53,8 @@
     closingPlaced: {},
     closingSelected: null,
     closingChecked: false,
-    closingSolved: false
+    closingSolved: false,
+    tutorialStep: 0
   };
 
   const savedCompleted = new Set();
@@ -90,6 +92,33 @@
     "你好，我是灰羽。接下来，由我带你把文学作品变成一场推理游戏。",
     "这里不需要先背完原著。观察人物、寻找线索，然后亲自判断真相。",
     "选一个案件开始吧。每本书都会被改造成一段可以参与的故事。"
+  ];
+
+  const TUTORIAL_CASE_ID = "letter_01";
+  const TUTORIAL_STEPS = [
+    { t: "欢迎。我是灰羽。这第一次，我会带你从头到尾破一个案子，顺便把这里熟悉一下。" },
+    { t: "右上角三个小按钮：♪ 是音乐，⚙ 是设置，🏆 是成就。点开设置，能换背景、换字体，也能调我说话的音效。", hint: [".bgm-trigger", ".settings-trigger", ".ach-trigger"] },
+    { t: "右边那支 ✎，是你的侦探笔记。想到什么，随时记下来。", hint: [".nb-tab"] },
+    { t: "好，开始前先记住一句：推理故事里，最显眼的东西，往往最容易被忽略。" },
+    { t: "这一案叫《失窃的信》。一个部长，当着失主的面偷走了一封信。警察把他的家翻遍了，就是找不到。", panel: "case" },
+    { t: "我们先看看人物和案件概要，再决定从哪儿查。", panel: "case" },
+    { t: "调查阶段会像这样列出几个行动。先点「询问搜查范围」。", panel: "actions", act: 0 },
+    { t: "警察搜了家具、坐垫、书、地板、墙纸……所有隐蔽处都找过了。", panel: "actions", act: 0 },
+    { t: "再点「核对信件外观档案」，先知道要找什么。", panel: "actions", act: 1 },
+    { t: "红色小印章、公爵家徽、粗犷笔迹。记牢这几条。", panel: "actions", act: 1 },
+    { t: "接着去「调查D的书桌」，看看这个部长是什么样的人。", panel: "actions", act: 2 },
+    { t: "桌面整齐得很。一个爱整洁的人，通常不会把东西乱丢。", panel: "actions", act: 2 },
+    { t: "最后，去「查看壁炉前的卡片架」。那里有点不对劲。", panel: "actions", act: 3 },
+    { t: "一封信，又脏又皱，几乎撕成两半，却插在明晃晃的卡片架上。……有意思。", panel: "actions", act: 3 },
+    { t: "线索到手了。把两件事放在一起看：警察找遍了所有隐蔽处，却没找到。那信，会不会根本没被藏起来？", panel: "deduce" },
+    { t: "再看那封“废信”：处处和档案相反，只有大小一样。相反得太刻意了。", panel: "deduce" },
+    { t: "……所以，它多半就是那封信——被翻了个面，摆在最显眼的地方。", panel: "deduce" },
+    { t: "推理成立。现在点「真相揭示」，把真相拼出来。", panel: "closing" },
+    { t: "把「翻了个面」「壁炉前」「最显眼处」拖进空里，就对了。", panel: "closing" },
+    { t: "对。他把信翻面、重封，弄脏弄皱，插在谁都看得见的卡片架上。", panel: "truth" },
+    { t: "最聪明的藏法，就是根本不藏。", panel: "truth" },
+    { t: "教程到这里就结束了。现在，你可以自己选一个案子了。" },
+    { t: "音乐、音效、笔记，都在老地方。别偷懒，推理错了也能重来。" }
   ];
 
   function script() {
@@ -490,12 +519,112 @@
       if (state.closingSolved) renderClosingTruth();
       else renderClosing();
     }
-    if (homeTrigger) homeTrigger.hidden = state.phase === "menu";
+    else if (state.phase === "tutorial") renderTutorial();
+    if (homeTrigger) homeTrigger.hidden = state.phase === "menu" || state.phase === "tutorial";
     document.body.classList.toggle("case-active", state.phase !== "menu");
     applyIllustration();
     // Lets the notebook know which case's notes to show.
     document.body.dataset.caseId = state.scriptId || "";
     document.dispatchEvent(new CustomEvent("game:render"));
+  }
+
+  function tutorialCase() {
+    return SCRIPTS.find(function (s) { return s.id === TUTORIAL_CASE_ID; }) || SCRIPTS[0];
+  }
+
+  function clearTutorialHints() {
+    document.querySelectorAll(".tutorial-hint").forEach(function (el) { el.classList.remove("tutorial-hint"); });
+  }
+
+  function startTutorial() {
+    state.tutorialStep = 0;
+    state.scriptId = TUTORIAL_CASE_ID;
+    resetCase();
+    setPhase("tutorial");
+  }
+
+  function finishTutorial() {
+    try { localStorage.setItem(TUTORIAL_KEY, "1"); } catch (e) { /* ignore */ }
+    clearTutorialHints();
+    state.scriptId = null;
+    resetCase();
+    setPhase("menu");
+  }
+
+  function advanceTutorial() {
+    state.tutorialStep++;
+    if (state.tutorialStep >= TUTORIAL_STEPS.length) { finishTutorial(); return; }
+    renderTutorial();
+  }
+
+  function tutorialCasePanel(s) {
+    const chars = s.characters.map(function (c) {
+      return '<div class="char"><div class="char-name">' + escapeHtml(c.name) + '</div><div class="char-meta">' + escapeHtml(c.title) + '</div></div>';
+    }).join("");
+    return '<section class="panel"><h3>案件概要</h3><p class="story">' + escapeHtml(s.summary) + '</p>' +
+      '<h3>人物</h3><div class="char-grid">' + chars + '</div></section>';
+  }
+
+  function tutorialActionsPanel(s, idx) {
+    const keyActs = ["a1", "a1b", "a4", "a5"];
+    const html = keyActs.map(function (id, i) {
+      const a = s.actions.find(function (x) { return x.id === id; });
+      if (!a) return "";
+      return '<button class="action' + (i === idx ? " tutorial-act" : "") + '" type="button"><span>' + (i < idx ? "✓ " : "") + escapeHtml(a.label) + '</span><small>' + (a.type === "talk" ? "对话" : "搜证") + '</small></button>';
+    }).join("");
+    return '<section class="panel"><h3>调查行动</h3><div class="action-grid">' + html + '</div></section>';
+  }
+
+  function tutorialDeducePanel(s) {
+    const items = ["信不在隐蔽处，而在明处", "卡片架的信与档案处处相反，是刻意伪装", "信被翻面重封，摆在最显眼处"];
+    return '<section class="panel"><h3>推理</h3><ul class="clue-list">' + items.map(function (t) { return '<li class="got"><span>' + escapeHtml(t) + '</span></li>'; }).join("") + '</ul></section>';
+  }
+
+  function tutorialClosingPanel(s) {
+    const c = s.closing;
+    if (!c) return "";
+    const segHtml = c.segments.map(function (seg) {
+      if (seg.slot != null) {
+        const slot = c.slots.find(function (x) { return String(x.id) === String(seg.slot); });
+        return '<span class="closing-slot filled">' + escapeHtml(slot ? slot.answer : "？") + '</span>';
+      }
+      return '<span class="closing-text">' + escapeHtml(seg.text) + '</span>';
+    }).join("");
+    return '<section class="panel"><h3>真相还原</h3><p class="closing-sentence">' + segHtml + '</p><p class="muted">把正确线索拖进空里，就能拼出真相。</p></section>';
+  }
+
+  function tutorialTruthPanel(s) {
+    return '<section class="panel"><h3>真相</h3><p class="story">' + escapeHtml(s.solution) + '</p></section>';
+  }
+
+  function renderTutorial() {
+    const step = TUTORIAL_STEPS[state.tutorialStep];
+    if (!step) { finishTutorial(); return; }
+    clearTutorialHints();
+    guide(step.t, "talk", (step.panel === "deduce" || step.panel === "closing") ? "thinking" : "idle");
+
+    if (step.hint) {
+      step.hint.forEach(function (sel) {
+        const el = document.querySelector(sel);
+        if (el) el.classList.add("tutorial-hint");
+      });
+    }
+
+    const s = tutorialCase();
+    let body = "";
+    if (step.panel === "case") body = tutorialCasePanel(s);
+    else if (step.panel === "actions") body = tutorialActionsPanel(s, step.act);
+    else if (step.panel === "deduce") body = tutorialDeducePanel(s);
+    else if (step.panel === "closing") body = tutorialClosingPanel(s);
+    else if (step.panel === "truth") body = tutorialTruthPanel(s);
+
+    app.innerHTML =
+      '<header class="screen-header"><p class="eyebrow">新手教程</p><h2>' + escapeHtml(s.title) + '</h2></header>' +
+      body +
+      '<div class="tutorial-controls">' +
+        '<button class="btn primary" type="button" data-action="tutorial-next">继续</button>' +
+        '<button class="btn" type="button" data-action="tutorial-skip">跳过教程</button>' +
+      '</div>';
   }
 
   function renderMenu() {
@@ -522,6 +651,7 @@
         '<h1>谜案重启</h1>' +
         '<p class="tagline">用轻量剧本杀的方式，把推理文学改造成可互动的网页体验。</p>' +
       '</header>' +
+      '<div class="tutorial-entry"><button class="btn small" type="button" data-action="tutorial-start">新手教程</button></div>' +
       '<section class="intro-strip">' +
         '<div><strong>读一段故事</strong><span>像视觉小说一样，跟着角色的对白进入原著。</span></div>' +
         '<div><strong>亲手搜证</strong><span>询问嫌疑人、勘察现场，把线索收进背包。</span></div>' +
@@ -1095,7 +1225,16 @@
     } else if (action === "close-background-viewer") {
       backgroundViewer.hidden = true;
     } else if (action === "welcome-continue") {
+      let first = false;
+      try { first = localStorage.getItem(TUTORIAL_KEY) !== "1"; } catch (e) { first = true; }
       closeWelcome();
+      if (first) startTutorial();
+    } else if (action === "tutorial-start") {
+      startTutorial();
+    } else if (action === "tutorial-next") {
+      advanceTutorial();
+    } else if (action === "tutorial-skip") {
+      finishTutorial();
     } else if (action === "mascot") {
       pokeMascot();
     } else if (action === "voice-preview") {

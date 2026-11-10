@@ -2736,3 +2736,35 @@ body.notebook-open .bgm-control { right: 408px; }
   user-select: none;
 }
 
+.tutorial-entry {
+  text-align: center;
+  margin: 0 0 8px;
+}
+
+.tutorial-controls {
+  display: flex;
+  gap: 10px;
+  margin-top: 14px;
+  flex-wrap: wrap;
+}
+
+.tutorial-controls .btn {
+  flex: 1 1 auto;
+}
+
+.tutorial-act {
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 35%, transparent);
+}
+
+.tutorial-hint {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  animation: tutorialPulse 1.3s ease-in-out infinite;
+}
+
+@keyframes tutorialPulse {
+  0%, 100% { box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent); }
+  50% { box-shadow: 0 0 0 8px color-mix(in srgb, var(--accent) 34%, transparent); }
+}
+
