@@ -1,0 +1,65 @@
+{
+  "script": {
+    "id": "demo_01",
+    "title": "示例案",
+    "subtitle": "疑云初起 | 示例",
+    "source": "改编自某公有领域作品",
+    "difficulty": "入门",
+    "cover": "01",
+    "immersive": true,
+    "summary": "一场看似寻常的失踪案，留下的线索却处处对不上。",
+    "victim": "失踪者",
+    "speakers": {
+      "narr": { "name": "", "voice": null },
+      "guide": { "name": "灰羽", "voice": "guide" },
+      "a": { "name": "甲", "voice": "mid" }
+    },
+    "characters": [
+      { "id": "c1", "name": "甲", "title": "目击者", "motive": "隐瞒自己的行踪", "alibi": "自称当晚在家", "aliases": ["甲某"] }
+    ],
+    "clues": [
+      { "id": "k1", "name": "泥脚印", "text": "现场留下了一串泥脚印。" }
+    ],
+    "scenes": {
+      "intro": [ { "s": "narr", "t": "雨夜，一桩失踪案。" } ],
+      "deduce": [ { "s": "guide", "t": "现在轮到你说话了。" } ],
+      "truth": [ { "s": "narr", "t": "真相是这样的。" } ]
+    },
+    "actions": [
+      { "id": "a1", "type": "search", "label": "勘察现场", "clueIds": ["k1"], "lines": [ { "s": "narr", "t": "你发现了一串泥脚印。" } ] }
+    ],
+    "questions": [
+      {
+        "id": "q1",
+        "prompt": "现场留下了什么？",
+        "kind": "clue",
+        "choice": { "options": ["k1"], "answer": "k1" },
+        "fill": { "answers": [ { "text": "泥脚印", "aliases": ["脚印"] } ] },
+        "basedOn": ["k1"]
+      }
+    ],
+    "solution": "甲在雨夜去过现场。"
+  },
+  "coach": {
+    "facts": [ "失踪者最后一次被人看到是在雨夜。" ],
+    "clues": [
+      { "id": "k1", "surface": "现场有一串泥脚印", "meaning": "有人雨夜到过现场" }
+    ],
+    "deductions": [
+      { "id": "D1", "text": "有人在雨夜去过现场", "basis": ["k1"] }
+    ],
+    "redHerrings": [ "邻居的狗叫只是巧合。" ],
+    "finalTruth": "甲在雨夜去过现场，并隐瞒了这件事。"
+  },
+  "closing": {
+    "intro": "把真相的线索拼起来。",
+    "segments": [ { "text": "真相是：" }, { "slot": 0 }, { "text": "在雨夜去过现场。" } ],
+    "slots": [ { "id": 0, "answer": "甲" } ],
+    "clues": [
+      { "id": "m1", "text": "邻居", "initial": true },
+      { "id": "m2", "text": "狗叫", "initial": true },
+      { "id": "c1", "text": "甲", "requires": "D1" },
+      { "id": "c2", "text": "路人", "requires": "D1" }
+    ]
+  }
+}
