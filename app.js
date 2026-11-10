@@ -821,15 +821,9 @@
       return state.statedDeductions.indexOf(id) < 0;
     });
     newIds.forEach(function (id) { state.statedDeductions.push(id); });
-    let revealed = 0;
-    if (newIds.length) {
-      const c = script().closing;
-      const pool = c ? (c.clues || []) : [];
-      revealed = pool.filter(function (cl) { return newIds.indexOf(cl.requires) >= 0; }).length;
-    }
     renderImmerse();
     const pose = immersePose(parsed.feedbackType);
-    guide(revealed ? (reply + "（卷宗里多了 " + revealed + " 条新线索。）") : reply, pose.expr, pose.pose);
+    guide(reply, pose.expr, pose.pose);
     const input = document.getElementById("immerseInput");
     if (input) input.focus();
   }
