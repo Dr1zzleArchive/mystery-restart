@@ -2711,8 +2711,11 @@ body.notebook-open .bgm-control { right: 408px; }
   background: color-mix(in srgb, var(--accent) 18%, var(--panel-2));
 }
 
-.closing-slot.locked {
+.closing-unknown {
+  padding: 8px 14px;
   color: var(--muted);
-  border-bottom: none;
-  cursor: not-allowed;
+  background: color-mix(in srgb, var(--panel-2) 60%, transparent);
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  user-select: none;
 }

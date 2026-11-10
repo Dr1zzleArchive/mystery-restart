@@ -644,19 +644,18 @@
     return out;
   }
 
-  function slotRequires(s, slot) {
-    return slot && slot.requires ? slot.requires : "";
+  function closingClues(c) {
+    if (c.clues) return c.clues;
+    return (c.fragments || []).map(function (f) { return { id: f, text: f, initial: true }; });
   }
 
-  function slotUnlocked(s, slot) {
-    const req = slotRequires(s, slot);
-    return !req || state.statedDeductions.indexOf(req) >= 0;
-  }
-
-  function closingSlot(s, slotId) {
+  function availableClosingClues(s) {
     const c = s.closing;
-    if (!c) return null;
-    return c.slots.find(function (x) { return String(x.id) === String(slotId); }) || null;
+    if (!c) return [];
+    return closingClues(c).filter(function (cl) {
+      if (!cl.requires) return !!cl.initial;
+      return state.statedDeductions.indexOf(cl.requires) >= 0;
+    });
   }
 
   function renderClosing() {
@@ -671,10 +670,6 @@
     }
     const segHtml = c.segments.map(function (seg) {
       if (seg.slot != null) {
-        const slot = closingSlot(s, seg.slot);
-        if (!slotUnlocked(s, slot)) {
-          return '<span class="closing-slot locked" title="需要先推出对应的推理">🔒</span>';
-        }
         const placed = state.closingPlaced[seg.slot];
         let cls = "closing-slot";
         if (placed) cls += " filled";
@@ -684,34 +679,28 @@
       return '<span class="closing-text">' + escapeHtml(seg.text) + '</span>';
     }).join("");
 
+    const allClues = closingClues(c);
+    const available = availableClosingClues(s);
+    const hiddenCount = allClues.length - available.length;
     const used = {};
     Object.keys(state.closingPlaced).forEach(function (k) { used[state.closingPlaced[k]] = true; });
-    const allAnswers = {};
-    const unlockedAnswers = {};
-    c.slots.forEach(function (slot) {
-      allAnswers[slot.answer] = true;
-      if (slotUnlocked(s, slot)) unlockedAnswers[slot.answer] = true;
-    });
-    const frags = shuffle(c.fragments).filter(function (f) {
-      if (used[f]) return false;
-      if (allAnswers[f] && !unlockedAnswers[f]) return false;
-      return true;
-    }).map(function (f) {
-      const selected = state.closingSelected === f ? " selected" : "";
-      return '<button class="closing-frag' + selected + '" type="button" draggable="true" data-frag="' + escapeHtml(f) + '">' + escapeHtml(f) + '</button>';
+    const trayClues = available.filter(function (cl) { return !used[cl.text]; });
+    const frags = shuffle(trayClues).map(function (cl) {
+      const selected = state.closingSelected === cl.text ? " selected" : "";
+      return '<button class="closing-frag' + selected + '" type="button" draggable="true" data-frag="' + escapeHtml(cl.text) + '">' + escapeHtml(cl.text) + '</button>';
     }).join("");
-
-    const lockedCount = c.slots.filter(function (slot) { return !slotUnlocked(s, slot); }).length;
-    const lockHint = lockedCount
-      ? '<p class="muted">还有 ' + lockedCount + ' 处需要先和灰羽对谈、把对应推理推出来，才能解锁。已成立推理：' + state.statedDeductions.length + ' 条。</p>'
+    let unknown = "";
+    for (let i = 0; i < hiddenCount; i++) unknown += '<span class="closing-unknown">???</span>';
+    const unknownHint = hiddenCount
+      ? '<p class="muted">还有 ' + hiddenCount + ' 条线索未发现。和灰羽把推理聊出来，它们才会出现。</p>'
       : "";
 
     app.innerHTML =
       '<header class="screen-header"><p class="eyebrow">真相揭示 · ' + escapeHtml(s.title) + '</p><h2>拼出真相</h2>' +
         '<p class="muted">' + escapeHtml(c.intro || "把真相的关键拼起来。") + '</p></header>' +
-      '<section class="panel"><h3>真相还原</h3>' + lockHint + '<p class="closing-sentence">' + segHtml + '</p>' +
-        '<p class="closing-tray-label muted">文字块：点击选中，再点缺口放入；也可以直接拖动。</p>' +
-        '<div class="closing-tray">' + frags + '</div></section>' +
+      '<section class="panel"><h3>真相还原</h3>' + unknownHint + '<p class="closing-sentence">' + segHtml + '</p>' +
+        '<p class="closing-tray-label muted">线索：点击选中，再点缺口放入；也可以直接拖动。</p>' +
+        '<div class="closing-tray">' + frags + unknown + '</div></section>' +
       '<div class="actions"><button class="btn primary" data-action="closing-check">检查真相</button><button class="btn" data-action="closing-back">返回对谈</button><button class="btn" data-action="menu">返回选关</button></div>';
   }
 
@@ -750,9 +739,6 @@
 
   function placeFragment(slotId, text) {
     if (text == null || text === "") return;
-    const s = script();
-    const slot = closingSlot(s, slotId);
-    if (!slot || !slotUnlocked(s, slot)) return;
     state.closingPlaced[slotId] = text;
     state.closingSelected = null;
     state.closingChecked = false;
@@ -766,12 +752,6 @@
   }
 
   function tapSlot(slotId) {
-    const s = script();
-    const slot = closingSlot(s, slotId);
-    if (!slot || !slotUnlocked(s, slot)) {
-      guide("这个空还没解锁。先回去和灰羽把对应推理聊出来。", "thinking", "thinking");
-      return;
-    }
     if (state.closingPlaced[slotId]) { clearSlot(slotId); return; }
     if (state.closingSelected) placeFragment(slotId, state.closingSelected);
   }
@@ -780,11 +760,6 @@
     const s = script();
     const c = s.closing;
     if (!c) return;
-    const locked = c.slots.filter(function (slot) { return !slotUnlocked(s, slot); });
-    if (locked.length) {
-      guide("还有 " + locked.length + " 处推理没成立。先回去和灰羽把它们聊出来。", "thinking", "thinking");
-      return;
-    }
     const allFilled = c.slots.every(function (slot) { return state.closingPlaced[slot.id]; });
     if (!allFilled) {
       guide("还有空没填。把所有文字块都放进去，再检查。", "thinking", "thinking");
@@ -842,12 +817,19 @@
       return;
     }
     state.aiChat.push({ role: "assistant", content: reply });
-    (parsed.unlockedDeductionIds || []).forEach(function (id) {
-      if (state.statedDeductions.indexOf(id) < 0) state.statedDeductions.push(id);
+    const newIds = (parsed.unlockedDeductionIds || []).filter(function (id) {
+      return state.statedDeductions.indexOf(id) < 0;
     });
+    newIds.forEach(function (id) { state.statedDeductions.push(id); });
+    let revealed = 0;
+    if (newIds.length) {
+      const c = script().closing;
+      const pool = c ? (c.clues || []) : [];
+      revealed = pool.filter(function (cl) { return newIds.indexOf(cl.requires) >= 0; }).length;
+    }
     renderImmerse();
     const pose = immersePose(parsed.feedbackType);
-    guide(reply, pose.expr, pose.pose);
+    guide(revealed ? (reply + "（卷宗里多了 " + revealed + " 条新线索。）") : reply, pose.expr, pose.pose);
     const input = document.getElementById("immerseInput");
     if (input) input.focus();
   }

@@ -82,7 +82,7 @@
 - 简单模式用 `choice`，困难模式用 `fill`。`sentence` 可以省略，此时直接对 `prompt` 作答。
 - `basedOn` 是推出答案所依据的线索，检查工具会确认这些线索都能在调查中拿到。
 
-> 沉浸模式与真相拼图的字段（`script.coach`、`script.closing`，含 `closing.slots[].requires`）见 `06-case-package.md`；推理通过和灰羽对话成立，拼图空位由 `requires` 门控。
+> 沉浸模式与真相拼图的字段（`script.coach`、`script.closing`，含 `closing.clues[].requires`）见 `06-case-package.md`；空位始终可填，正确线索通过和灰羽对话推理解锁。
 
 ## 填空判定规则（`judge.js`）
 

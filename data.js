@@ -267,15 +267,35 @@ window.SCRIPTS = [
         { text: "，准备继续作案。" }
       ],
       slots: [
-        { id: 0, answer: "后代", requires: "D4" },
-        { id: 1, answer: "夺取爵位和遗产", requires: "D4" },
-        { id: 2, answer: "巨型猎犬", requires: "D1" },
-        { id: 3, answer: "磷光涂料", requires: "D1" },
-        { id: 4, answer: "地狱猎犬", requires: "D1" },
+        { id: 0, answer: "后代" },
+        { id: 1, answer: "夺取爵位和遗产" },
+        { id: 2, answer: "巨型猎犬" },
+        { id: 3, answer: "磷光涂料" },
+        { id: 4, answer: "地狱猎犬" },
         { id: 5, answer: "心脏不好" },
-        { id: 6, answer: "旧靴子", requires: "D3" }
+        { id: 6, answer: "旧靴子" }
       ],
-      fragments: ["后代", "夺取爵位和遗产", "巨型猎犬", "磷光涂料", "地狱猎犬", "心脏不好", "旧靴子", "亨利爵士", "巴里摩尔", "查尔斯爵士", "普通猎犬", "烛光", "书信"]
+      clues: [
+        { id: "h1", text: "亨利爵士", initial: true },
+        { id: "h2", text: "巴里摩尔", initial: true },
+        { id: "h3", text: "劳拉·莱昂斯", initial: true },
+        { id: "h4", text: "普通猎犬", initial: true },
+        { id: "h5", text: "烛光", initial: true },
+        { id: "h6", text: "书信", initial: true },
+        { id: "h7", text: "泥沼怪物", initial: true },
+        { id: "h8", text: "巨型猎犬", requires: "D1" },
+        { id: "h9", text: "磷光涂料", requires: "D1" },
+        { id: "h10", text: "夜光粉", requires: "D1" },
+        { id: "h11", text: "地狱猎犬", requires: "D2" },
+        { id: "h12", text: "心脏不好", requires: "D2" },
+        { id: "h13", text: "雪茄", requires: "D2" },
+        { id: "h14", text: "旧靴子", requires: "D3" },
+        { id: "h15", text: "鞋印", requires: "D3" },
+        { id: "h16", text: "气味", requires: "D3" },
+        { id: "h17", text: "后代", requires: "D4" },
+        { id: "h18", text: "夺取爵位和遗产", requires: "D4" },
+        { id: "h19", text: "远房亲戚", requires: "D4" }
+      ]
     }
   },
   {
@@ -480,13 +500,29 @@ window.SCRIPTS = [
         { text: "。" }
       ],
       slots: [
-        { id: 0, answer: "秘密搜查", requires: "D1" },
-        { id: 1, answer: "夜不归宿", requires: "D1" },
-        { id: 2, answer: "翻了个面", requires: "D2" },
-        { id: 3, answer: "壁炉前", requires: "D3" },
-        { id: 4, answer: "最显眼处", requires: "D3" }
+        { id: 0, answer: "秘密搜查" },
+        { id: 1, answer: "夜不归宿" },
+        { id: 2, answer: "翻了个面" },
+        { id: 3, answer: "壁炉前" },
+        { id: 4, answer: "最显眼处" }
       ],
-      fragments: ["秘密搜查", "夜不归宿", "翻了个面", "壁炉前", "最显眼处", "烧掉了", "藏进书里", "塞进坐垫", "带在身上", "放进了抽屉", "撕成两半"]
+      clues: [
+        { id: "l1", text: "烧掉了", initial: true },
+        { id: "l2", text: "藏进书里", initial: true },
+        { id: "l3", text: "塞进坐垫", initial: true },
+        { id: "l4", text: "带在身上", initial: true },
+        { id: "l5", text: "放进了抽屉", initial: true },
+        { id: "l6", text: "塞进墙壁", initial: true },
+        { id: "l7", text: "秘密搜查", requires: "D1" },
+        { id: "l8", text: "夜不归宿", requires: "D1" },
+        { id: "l9", text: "警察受贿", requires: "D1" },
+        { id: "l10", text: "翻了个面", requires: "D2" },
+        { id: "l11", text: "撕成两半", requires: "D2" },
+        { id: "l12", text: "用火烧过", requires: "D2" },
+        { id: "l13", text: "壁炉前", requires: "D3" },
+        { id: "l14", text: "最显眼处", requires: "D3" },
+        { id: "l15", text: "书桌抽屉", requires: "D3" }
+      ]
     }
   },
   {
@@ -673,13 +709,32 @@ window.SCRIPTS = [
         { text: "，一路追出通奸与谋杀。" }
       ],
       slots: [
-        { id: 0, answer: "毕氏", requires: "D2" },
-        { id: 1, answer: "灌醉", requires: "D1" },
-        { id: 2, answer: "心疼病", requires: "D1" },
-        { id: 3, answer: "珊瑚扇坠", requires: "D3" },
-        { id: 4, answer: "重现", requires: "D4" }
+        { id: 0, answer: "毕氏" },
+        { id: 1, answer: "灌醉" },
+        { id: 2, answer: "心疼病" },
+        { id: 3, answer: "珊瑚扇坠" },
+        { id: 4, answer: "重现" }
       ],
-      fragments: ["毕氏", "灌醉", "心疼病", "珊瑚扇坠", "重现", "柳氏", "吕佩", "匡天佑", "勒死", "毒死", "银两", "失窃"]
+      clues: [
+        { id: "s1", text: "皮熊", initial: true },
+        { id: "s2", text: "匡天佑", initial: true },
+        { id: "s3", text: "勒死", initial: true },
+        { id: "s4", text: "摔死", initial: true },
+        { id: "s5", text: "烧掉", initial: true },
+        { id: "s6", text: "埋了", initial: true },
+        { id: "s7", text: "带在身上", initial: true },
+        { id: "s8", text: "灌醉", requires: "D1" },
+        { id: "s9", text: "心疼病", requires: "D1" },
+        { id: "s10", text: "毒死", requires: "D1" },
+        { id: "s11", text: "毕氏", requires: "D2" },
+        { id: "s12", text: "柳氏", requires: "D2" },
+        { id: "s13", text: "吕佩", requires: "D2" },
+        { id: "s14", text: "珊瑚扇坠", requires: "D3" },
+        { id: "s15", text: "银两", requires: "D3" },
+        { id: "s16", text: "重现", requires: "D4" },
+        { id: "s17", text: "失窃", requires: "D4" },
+        { id: "s18", text: "书信", requires: "D4" }
+      ]
     }
   }
 ];
