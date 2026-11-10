@@ -598,17 +598,11 @@
       ? '<ul class="clue-list">' + clueItems + '</ul>'
       : '<p class="muted">还没有线索。先去调查行动里问一问、查一查。</p>';
 
-    const linkOptions = collected.map(function (c) {
-      return '<option value="' + escapeHtml(c.id) + '">' + escapeHtml(c.name) + '</option>';
-    }).join("");
     const deductions = (s.coach && s.coach.deductions) || [];
     const established = deductions.filter(function (d) { return state.statedDeductions.indexOf(d.id) >= 0; });
     const establishedHtml = established.length
       ? '<ul class="clue-list">' + established.map(function (d) { return '<li class="got"><span>' + escapeHtml(d.text) + '</span></li>'; }).join("") + '</ul>'
-      : '<p class="muted">还没有成立的推理。选两条线索，试着把它们连起来。</p>';
-    const linkBody = collected.length >= 2
-      ? '<div class="link-row"><select id="linkA" aria-label="第一条线索">' + linkOptions + '</select><span>+</span><select id="linkB" aria-label="第二条线索">' + linkOptions + '</select><button class="btn small primary" type="button" data-action="link">联想</button></div>'
-      : '<p class="muted">至少需要两条线索才能联想。</p>';
+      : '<p class="muted">还没有成立的推理。把你的判断告诉灰羽，他会帮你确认，或指出还差哪一步。</p>';
 
     const chatHtml = state.aiChat.map(function (m) {
       const who = m.role === "user" ? "你" : "灰羽";
@@ -624,8 +618,9 @@
       '<div id="vnHost" class="vn-host"></div>' +
       '<section class="panel"><h3>调查行动</h3><div class="action-grid">' + actionBtns + '</div></section>' +
       '<section class="panel"><h3>线索背包（' + collected.length + '）</h3>' + clueBody + '</section>' +
-      '<section class="panel"><h3>线索联想</h3>' + linkBody +
-        '<h4>已成立的推理</h4>' + establishedHtml +
+      '<section class="panel"><h3>推理进度</h3>' +
+        '<p class="muted">把你的推理告诉灰羽。推理成立后，真相拼图里对应的空缺才会解锁。</p>' +
+        establishedHtml +
       '</section>' +
       '<section class="panel immerse-panel"><h3>推理对谈</h3>' +
         '<div id="immerseChat" class="immerse-chat" aria-live="polite">' + empty + chatHtml + thinking + '</div>' +
@@ -638,35 +633,6 @@
         '</div>' +
       '</section>' +
       '<div class="actions"><button class="btn" data-action="intro">重看开场</button><button class="btn" data-action="menu">返回选关</button></div>';
-  }
-
-  function matchPair(pair, a, b) {
-    return Array.isArray(pair) && ((pair[0] === a && pair[1] === b) || (pair[0] === b && pair[1] === a));
-  }
-
-  function tryLink() {
-    const aEl = document.getElementById("linkA");
-    const bEl = document.getElementById("linkB");
-    const a = aEl ? aEl.value : "";
-    const b = bEl ? bEl.value : "";
-    if (!a || !b || a === b) {
-      guide("选两条不同的线索，才能联想。", "thinking", "thinking");
-      return;
-    }
-    const deductions = (script().coach && script().coach.deductions) || [];
-    const hit = deductions.find(function (d) { return matchPair(d.pair, a, b); });
-    if (!hit) {
-      guide("这两条线索还连不到一起。再想想它们各自说明了什么。", "unimpressed", "unimpressed");
-      return;
-    }
-    if (state.statedDeductions.indexOf(hit.id) >= 0) {
-      guide("这条你已经推出来了。", "thinking", "thinking");
-      return;
-    }
-    state.statedDeductions.push(hit.id);
-    save();
-    renderImmerse();
-    guide("……" + hit.text + "。这条推理成立了。", "neutral", "idle");
   }
 
   function shuffle(arr) {
@@ -737,7 +703,7 @@
 
     const lockedCount = c.slots.filter(function (slot) { return !slotUnlocked(s, slot); }).length;
     const lockHint = lockedCount
-      ? '<p class="muted">还有 ' + lockedCount + ' 处需要先在「线索联想」或对谈里推出对应推理，才能解锁。已成立推理：' + state.statedDeductions.length + ' 条。</p>'
+      ? '<p class="muted">还有 ' + lockedCount + ' 处需要先和灰羽对谈、把对应推理推出来，才能解锁。已成立推理：' + state.statedDeductions.length + ' 条。</p>'
       : "";
 
     app.innerHTML =
@@ -803,7 +769,7 @@
     const s = script();
     const slot = closingSlot(s, slotId);
     if (!slot || !slotUnlocked(s, slot)) {
-      guide("这个空还没解锁。先去「线索联想」或对谈里把对应推理推出来。", "thinking", "thinking");
+      guide("这个空还没解锁。先回去和灰羽把对应推理聊出来。", "thinking", "thinking");
       return;
     }
     if (state.closingPlaced[slotId]) { clearSlot(slotId); return; }
@@ -816,7 +782,7 @@
     if (!c) return;
     const locked = c.slots.filter(function (slot) { return !slotUnlocked(s, slot); });
     if (locked.length) {
-      guide("还有 " + locked.length + " 处推理没成立。先去「线索联想」或对谈里把它们推出来。", "thinking", "thinking");
+      guide("还有 " + locked.length + " 处推理没成立。先回去和灰羽把它们聊出来。", "thinking", "thinking");
       return;
     }
     const allFilled = c.slots.every(function (slot) { return state.closingPlaced[slot.id]; });
@@ -1182,8 +1148,6 @@
     } else if (action === "investigate") {
       setPhase("immerse");
       guide("先把能问的问一遍、能查的查一遍。线索到手，我们再聊推理。", "talk", "thinking");
-    } else if (action === "link") {
-      tryLink();
     } else if (action === "immerse-send") {
       submitImmerse();
     } else if (action === "immerse-closing") {
