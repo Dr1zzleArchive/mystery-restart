@@ -127,24 +127,24 @@
   </aside>
   <section id="welcomeScreen" class="welcome-screen" aria-labelledby="welcomeTitle" hidden>
     <div class="welcome-backdrop"></div>
+    <audio id="welcomeVoice" src="assets/voice/welcome_v2.mp3" preload="auto"></audio>
     <div class="welcome-content">
       <p class="welcome-kicker">文学推理体验</p>
       <h1 id="welcomeTitle">欢迎来到谜案重启</h1>
-      <p class="welcome-lede">让灰羽带你从一本书开始，进入一场可以亲自作答的推理故事。</p>
+      <p class="welcome-lede" hidden>让灰羽带你从一本书开始，进入一场可以亲自作答的推理故事。</p>
       <div class="welcome-guide-wrap">
         <div class="welcome-halo"></div>
         <img id="welcomeGuide" class="welcome-guide" src="assets/mascot/cutout/fullbody_idle.png" alt="灰羽全身像" />
       </div>
-      <div class="welcome-dialogue" role="status">
+      <div class="welcome-dialogue" role="status" hidden>
         <img src="assets/mascot/cutout/portrait_idle.png" alt="" />
         <div>
           <strong>灰羽</strong>
-          <p id="welcomeLine">你好，我是灰羽。接下来，我会把文学作品拆成一场可以亲自参与的推理游戏。</p>
+          <p id="welcomeLine">你好，欢迎来到《谜案重启》。我是灰羽。在这里，你可以沉浸于每一桩案件，亲自追寻线索，揭开隐藏在真相背后的谜团。而我会陪伴在你身边，作为你的助手，协助你完成每一次调查与推理。</p>
         </div>
       </div>
       <div class="welcome-actions">
-        <button class="btn primary welcome-start" type="button" data-action="welcome-continue">开始体验</button>
-        <button class="welcome-skip" type="button" data-action="welcome-continue">跳过介绍</button>
+        <button id="welcomeBtn" class="btn primary welcome-start" type="button" data-action="welcome-begin">开始</button>
       </div>
     </div>
   </section>

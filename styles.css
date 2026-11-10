@@ -1275,6 +1275,11 @@ h3 {
 
 .welcome-dialogue p.line-in { animation: line-in .28s ease both; }
 
+.welcome-lede[hidden],
+.welcome-dialogue[hidden] {
+  display: none;
+}
+
 .welcome-actions {
   display: flex;
   align-items: center;

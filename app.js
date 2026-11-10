@@ -14,6 +14,8 @@
   const welcomeScreen = document.getElementById("welcomeScreen");
   const welcomeLine = document.getElementById("welcomeLine");
   const welcomeGuide = document.getElementById("welcomeGuide");
+  const welcomeVoice = document.getElementById("welcomeVoice");
+  const welcomeBtn = document.getElementById("welcomeBtn");
   const settingsPanel = document.getElementById("settingsPanel");
   const uiSize = document.getElementById("uiSize");
   const fontStyle = document.getElementById("fontStyle");
@@ -83,14 +85,7 @@
   const lastLine = {};
   let mascotClicks = 0;
   let mascotClickTimer = null;
-  let welcomeTimer = null;
   let aiBusy = false;
-
-  const welcomeLines = [
-    "你好，我是灰羽。接下来，由我带你把文学作品变成一场推理游戏。",
-    "这里不需要先背完原著。观察人物、寻找线索，然后亲自判断真相。",
-    "选一个案件开始吧。每本书都会被改造成一段可以参与的故事。"
-  ];
 
   function script() {
     return SCRIPTS.find(function (s) { return s.id === state.scriptId; });
@@ -378,12 +373,6 @@
     window.setTimeout(function () {
       welcomeScreen.classList.add("visible");
     }, 30);
-    let index = 0;
-    welcomeTimer = window.setInterval(function () {
-      if (welcomeScreen.hidden) return;
-      index = (index + 1) % welcomeLines.length;
-      window.Dialogue.typeInto(welcomeLine, welcomeLines[index], { voice: "guide" });
-    }, 4600);
   }
 
   function closeWelcome() {
@@ -393,13 +382,34 @@
     } catch (e) {
       // Local file mode can disable storage in some browsers.
     }
-    window.clearInterval(welcomeTimer);
+    if (welcomeVoice) {
+      try { welcomeVoice.pause(); } catch (e) { /* ignore */ }
+    }
     welcomeScreen.classList.remove("visible");
     welcomeScreen.classList.add("closing");
     window.setTimeout(function () {
       welcomeScreen.hidden = true;
       welcomeScreen.classList.remove("closing");
     }, 360);
+  }
+
+  function beginWelcome() {
+    const lede = document.querySelector(".welcome-lede");
+    const dialogue = document.querySelector(".welcome-dialogue");
+    if (lede) lede.hidden = false;
+    if (dialogue) dialogue.hidden = false;
+    if (welcomeVoice) {
+      try {
+        welcomeVoice.currentTime = 0;
+        welcomeVoice.play();
+      } catch (e) {
+        // Autoplay can be blocked until user gesture; this click counts as a gesture.
+      }
+    }
+    if (welcomeBtn) {
+      welcomeBtn.textContent = "进入游戏";
+      welcomeBtn.dataset.action = "welcome-continue";
+    }
   }
 
   function save() {
@@ -1094,6 +1104,8 @@
       backgroundViewer.hidden = false;
     } else if (action === "close-background-viewer") {
       backgroundViewer.hidden = true;
+    } else if (action === "welcome-begin") {
+      beginWelcome();
     } else if (action === "welcome-continue") {
       closeWelcome();
     } else if (action === "mascot") {
