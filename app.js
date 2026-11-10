@@ -6,21 +6,11 @@
   const STORAGE_KEY = "murder_restart_save_v3";
   const SETTINGS_KEY = "murder_restart_settings_v1";
   const WELCOME_KEY = "murder_restart_welcome_seen_v1";
-  const TUTORIAL_KEY = "murder_restart_tutorial_done_v1";
-  // ⚠️ 新手教程已禁用（2026-11-10）。
-  // 原因：浮动引导的「横跳 / 定位」问题尚未解决，体验不稳，故暂时从网页中移除。
-  // 源码全部保留在下方（TUTORIAL_CASE_ID、TUTORIAL_STEPS、renderTutorial 等函数），仅供后续修复参考。
-  // 若要重新启用：把 TUTORIAL_ENABLED 改为 true，并在 renderMenu 里加回「新手教程」入口、
-  // 以及在 welcome-continue 里恢复首次进入自动调用 startTutorial() 的逻辑。
-  const TUTORIAL_ENABLED = false;
 
   const app = document.getElementById("app");
   const mascotImg = document.getElementById("mascotImg");
   const guideFullbody = document.getElementById("guideFullbody");
   const bubble = document.getElementById("guideBubble");
-  const tutorialGuide = document.getElementById("tutorialGuide");
-  const tutorialGuideImg = document.getElementById("tutorialGuideImg");
-  const tutorialBubble = document.getElementById("tutorialBubble");
   const welcomeScreen = document.getElementById("welcomeScreen");
   const welcomeLine = document.getElementById("welcomeLine");
   const welcomeGuide = document.getElementById("welcomeGuide");
@@ -62,8 +52,7 @@
     closingPlaced: {},
     closingSelected: null,
     closingChecked: false,
-    closingSolved: false,
-    tutorialStep: 0
+    closingSolved: false
   };
 
   const savedCompleted = new Set();
@@ -96,39 +85,11 @@
   let mascotClickTimer = null;
   let welcomeTimer = null;
   let aiBusy = false;
-  let lastTutorialAnchor = null;
 
   const welcomeLines = [
     "你好，我是灰羽。接下来，由我带你把文学作品变成一场推理游戏。",
     "这里不需要先背完原著。观察人物、寻找线索，然后亲自判断真相。",
     "选一个案件开始吧。每本书都会被改造成一段可以参与的故事。"
-  ];
-
-  const TUTORIAL_CASE_ID = "letter_01";
-  const TUTORIAL_STEPS = [
-    { t: "欢迎。我是灰羽。这第一次，我会带你从头到尾破一个案子，顺便把这里熟悉一下。" },
-    { t: "右上角三个小按钮：♪ 是音乐，⚙ 是设置，🏆 是成就。点开设置，能换背景、换字体，也能调我说话的音效。", hint: [".bgm-trigger", ".settings-trigger", ".ach-trigger"] },
-    { t: "右边那支 ✎，是你的侦探笔记。想到什么，随时记下来。", hint: [".nb-tab"] },
-    { t: "好，开始前先记住一句：推理故事里，最显眼的东西，往往最容易被忽略。" },
-    { t: "这一案叫《失窃的信》。一个部长，当着失主的面偷走了一封信。警察把他的家翻遍了，就是找不到。", panel: "case" },
-    { t: "我们先看看人物和案件概要，再决定从哪儿查。", panel: "case" },
-    { t: "调查阶段会像这样列出几个行动。先点「询问搜查范围」。", panel: "actions", act: 0 },
-    { t: "警察搜了家具、坐垫、书、地板、墙纸……所有隐蔽处都找过了。", panel: "actions", act: 0 },
-    { t: "再点「核对信件外观档案」，先知道要找什么。", panel: "actions", act: 1 },
-    { t: "红色小印章、公爵家徽、粗犷笔迹。记牢这几条。", panel: "actions", act: 1 },
-    { t: "接着去「调查D的书桌」，看看这个部长是什么样的人。", panel: "actions", act: 2 },
-    { t: "桌面整齐得很。一个爱整洁的人，通常不会把东西乱丢。", panel: "actions", act: 2 },
-    { t: "最后，去「查看壁炉前的卡片架」。那里有点不对劲。", panel: "actions", act: 3 },
-    { t: "一封信，又脏又皱，几乎撕成两半，却插在明晃晃的卡片架上。……有意思。", panel: "actions", act: 3 },
-    { t: "线索到手了。把两件事放在一起看：警察找遍了所有隐蔽处，却没找到。那信，会不会根本没被藏起来？", panel: "deduce" },
-    { t: "再看那封“废信”：处处和档案相反，只有大小一样。相反得太刻意了。", panel: "deduce" },
-    { t: "……所以，它多半就是那封信——被翻了个面，摆在最显眼的地方。", panel: "deduce" },
-    { t: "推理成立。现在点「真相揭示」，把真相拼出来。", panel: "closing" },
-    { t: "把「翻了个面」「壁炉前」「最显眼处」拖进空里，就对了。", panel: "closing" },
-    { t: "对。他把信翻面、重封，弄脏弄皱，插在谁都看得见的卡片架上。", panel: "truth" },
-    { t: "最聪明的藏法，就是根本不藏。", panel: "truth" },
-    { t: "教程到这里就结束了。现在，你可以自己选一个案子了。" },
-    { t: "音乐、音效、笔记，都在老地方。别偷懒，推理错了也能重来。" }
   ];
 
   function script() {
@@ -170,17 +131,6 @@
     setFullbody(pose || "idle");
   }
 
-  function guideTutorial(text, pose) {
-    if (tutorialBubble && tutorialBubble.dataset.text !== text) {
-      tutorialBubble.dataset.text = text;
-      window.Dialogue.typeInto(tutorialBubble, text, { voice: "guide" });
-    }
-    if (tutorialGuideImg && MASCOT.fullbodies) {
-      const src = MASCOT.fullbodies[pose] || MASCOT.fullbodies.idle;
-      if (src) tutorialGuideImg.src = src;
-    }
-  }
-
   function pickLine(key, lines) {
     // Avoid repeating the same line twice in a row.
     let index = Math.floor(Math.random() * lines.length);
@@ -198,7 +148,6 @@
   }
 
   function pokeMascot() {
-    if (state.phase === "tutorial") return;
     // Clicking repeatedly within a short window escalates the reaction.
     mascotClicks++;
     window.clearTimeout(mascotClickTimer);
@@ -541,167 +490,12 @@
       if (state.closingSolved) renderClosingTruth();
       else renderClosing();
     }
-    else if (state.phase === "tutorial") renderTutorial();
-    if (homeTrigger) homeTrigger.hidden = state.phase === "menu" || state.phase === "tutorial";
+    if (homeTrigger) homeTrigger.hidden = state.phase === "menu";
     document.body.classList.toggle("case-active", state.phase !== "menu");
     applyIllustration();
     // Lets the notebook know which case's notes to show.
     document.body.dataset.caseId = state.scriptId || "";
     document.dispatchEvent(new CustomEvent("game:render"));
-  }
-
-  function tutorialCase() {
-    return SCRIPTS.find(function (s) { return s.id === TUTORIAL_CASE_ID; }) || SCRIPTS[0];
-  }
-
-  function clearTutorialHints() {
-    document.querySelectorAll(".tutorial-hint").forEach(function (el) { el.classList.remove("tutorial-hint"); });
-  }
-
-  function showTutorialGuide() {
-    document.body.classList.add("tutorial-mode");
-    if (tutorialGuide) tutorialGuide.hidden = false;
-  }
-
-  function hideTutorialGuide() {
-    document.body.classList.remove("tutorial-mode");
-    if (tutorialGuide) tutorialGuide.hidden = true;
-  }
-
-  function tutorialAnchor(step) {
-    if (step && step.hint && step.hint.length) return "hint:" + step.hint.join("|");
-    if (step && step.panel) return "panel:" + step.panel;
-    return "default";
-  }
-
-  function tutorialTarget(step) {
-    if (step && step.hint && step.hint.length) {
-      const el = document.querySelector(step.hint[0]);
-      if (el) return el;
-    }
-    return document.querySelector(".tutorial-controls") || document.getElementById("app");
-  }
-
-  function positionTutorialGuide(step) {
-    if (!tutorialGuide) return;
-    const target = tutorialTarget(step);
-    if (!target) return;
-    const r = target.getBoundingClientRect();
-    const vw = window.innerWidth;
-    const vh = window.innerHeight;
-    const gW = Math.min(420, vw * 0.36);
-    const gH = Math.min(560, vh * 0.72);
-    const rightSide = (r.left + r.width / 2) > vw / 2;
-    let left = rightSide ? (r.left - gW - 14) : (r.right + 14);
-    let top = r.top + r.height / 2 - gH / 2;
-    left = Math.max(8, Math.min(vw - gW - 8, left));
-    top = Math.max(8, Math.min(vh - gH - 8, top));
-    tutorialGuide.style.left = left + "px";
-    tutorialGuide.style.top = top + "px";
-    tutorialGuide.style.right = "auto";
-    tutorialGuide.style.bottom = "auto";
-    tutorialGuide.style.transform = "none";
-  }
-
-  function startTutorial() {
-    if (!TUTORIAL_ENABLED) { setPhase("menu"); return; }
-    state.tutorialStep = 0;
-    state.scriptId = TUTORIAL_CASE_ID;
-    resetCase();
-    lastTutorialAnchor = null;
-    showTutorialGuide();
-    setPhase("tutorial");
-  }
-
-  function finishTutorial() {
-    try { localStorage.setItem(TUTORIAL_KEY, "1"); } catch (e) { /* ignore */ }
-    clearTutorialHints();
-    lastTutorialAnchor = null;
-    hideTutorialGuide();
-    state.scriptId = null;
-    resetCase();
-    setPhase("menu");
-  }
-
-  function advanceTutorial() {
-    state.tutorialStep++;
-    if (state.tutorialStep >= TUTORIAL_STEPS.length) { finishTutorial(); return; }
-    renderTutorial();
-  }
-
-  function tutorialCasePanel(s) {
-    const chars = s.characters.map(function (c) {
-      return '<div class="char"><div class="char-name">' + escapeHtml(c.name) + '</div><div class="char-meta">' + escapeHtml(c.title) + '</div></div>';
-    }).join("");
-    return '<section class="panel"><h3>案件概要</h3><p class="story">' + escapeHtml(s.summary) + '</p>' +
-      '<h3>人物</h3><div class="char-grid">' + chars + '</div></section>';
-  }
-
-  function tutorialActionsPanel(s, idx) {
-    const keyActs = ["a1", "a1b", "a4", "a5"];
-    const html = keyActs.map(function (id, i) {
-      const a = s.actions.find(function (x) { return x.id === id; });
-      if (!a) return "";
-      return '<button class="action' + (i === idx ? " tutorial-act" : "") + '" type="button"><span>' + (i < idx ? "✓ " : "") + escapeHtml(a.label) + '</span><small>' + (a.type === "talk" ? "对话" : "搜证") + '</small></button>';
-    }).join("");
-    return '<section class="panel"><h3>调查行动</h3><div class="action-grid">' + html + '</div></section>';
-  }
-
-  function tutorialDeducePanel(s) {
-    const items = ["信不在隐蔽处，而在明处", "卡片架的信与档案处处相反，是刻意伪装", "信被翻面重封，摆在最显眼处"];
-    return '<section class="panel"><h3>推理</h3><ul class="clue-list">' + items.map(function (t) { return '<li class="got"><span>' + escapeHtml(t) + '</span></li>'; }).join("") + '</ul></section>';
-  }
-
-  function tutorialClosingPanel(s) {
-    const c = s.closing;
-    if (!c) return "";
-    const segHtml = c.segments.map(function (seg) {
-      if (seg.slot != null) {
-        const slot = c.slots.find(function (x) { return String(x.id) === String(seg.slot); });
-        return '<span class="closing-slot filled">' + escapeHtml(slot ? slot.answer : "？") + '</span>';
-      }
-      return '<span class="closing-text">' + escapeHtml(seg.text) + '</span>';
-    }).join("");
-    return '<section class="panel"><h3>真相还原</h3><p class="closing-sentence">' + segHtml + '</p><p class="muted">把正确线索拖进空里，就能拼出真相。</p></section>';
-  }
-
-  function tutorialTruthPanel(s) {
-    return '<section class="panel"><h3>真相</h3><p class="story">' + escapeHtml(s.solution) + '</p></section>';
-  }
-
-  function renderTutorial() {
-    const step = TUTORIAL_STEPS[state.tutorialStep];
-    if (!step) { finishTutorial(); return; }
-    clearTutorialHints();
-    guideTutorial(step.t, (step.panel === "deduce" || step.panel === "closing") ? "thinking" : "idle");
-
-    if (step.hint) {
-      step.hint.forEach(function (sel) {
-        const el = document.querySelector(sel);
-        if (el) el.classList.add("tutorial-hint");
-      });
-    }
-
-    const s = tutorialCase();
-    let body = "";
-    if (step.panel === "case") body = tutorialCasePanel(s);
-    else if (step.panel === "actions") body = tutorialActionsPanel(s, step.act);
-    else if (step.panel === "deduce") body = tutorialDeducePanel(s);
-    else if (step.panel === "closing") body = tutorialClosingPanel(s);
-    else if (step.panel === "truth") body = tutorialTruthPanel(s);
-
-    app.innerHTML =
-      '<header class="screen-header"><p class="eyebrow">新手教程</p><h2>' + escapeHtml(s.title) + '</h2></header>' +
-      body +
-      '<div class="tutorial-controls">' +
-        '<button class="btn primary" type="button" data-action="tutorial-next">继续</button>' +
-        '<button class="btn" type="button" data-action="tutorial-skip">跳过教程</button>' +
-      '</div>';
-    const anchor = tutorialAnchor(step);
-    if (anchor !== lastTutorialAnchor) {
-      lastTutorialAnchor = anchor;
-      positionTutorialGuide(step);
-    }
   }
 
   function renderMenu() {
@@ -1301,14 +1095,7 @@
     } else if (action === "close-background-viewer") {
       backgroundViewer.hidden = true;
     } else if (action === "welcome-continue") {
-      // 新手教程已禁用：欢迎页结束后直接进入主菜单。
       closeWelcome();
-    } else if (action === "tutorial-start") {
-      startTutorial();
-    } else if (action === "tutorial-next") {
-      advanceTutorial();
-    } else if (action === "tutorial-skip") {
-      finishTutorial();
     } else if (action === "mascot") {
       pokeMascot();
     } else if (action === "voice-preview") {
