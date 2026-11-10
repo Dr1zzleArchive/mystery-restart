@@ -29,6 +29,8 @@ jobs:
           mkdir -p _site
           cp index.html styles.css *.js _site/
           cp -r assets _site/
+          VERSION="${GITHUB_SHA:0:7}"
+          sed -i "s/\.js\"/\.js?v=$VERSION\"/g; s/\.css\"/\.css?v=$VERSION\"/g" _site/index.html
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
