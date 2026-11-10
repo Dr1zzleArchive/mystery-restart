@@ -772,23 +772,11 @@
       savedCompleted.add(s.id);
       window.Achievements.unlock("first_case");
       save();
-      showRevealAnimation(function () { setPhase("closing"); });
+      setPhase("closing");
     } else {
       renderClosing();
       guide("有几处还不对。没关系，换一下线索再试一次。", "unimpressed", "unimpressed");
     }
-  }
-
-  function showRevealAnimation(done) {
-    const reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const el = document.createElement("div");
-    el.className = "closing-reveal";
-    el.innerHTML = '<div class="closing-reveal-glow"></div><div class="closing-reveal-text">拨云见日</div>';
-    document.body.appendChild(el);
-    window.setTimeout(function () {
-      el.remove();
-      if (done) done();
-    }, reduced ? 600 : 1900);
   }
 
   function submitImmerse() {
@@ -808,7 +796,8 @@
       history,
       state.collected.slice(),
       state.statedDeductions,
-      text
+      text,
+      state.collected.length >= script().clues.length
     );
     window.Coach.ask({ base: settings.aiBase, key: settings.aiKey, model: settings.aiModel, proxyUrl: settings.proxyUrl }, messages)
       .then(handleImmerseReply)
@@ -882,7 +871,9 @@
       const names = newClues.map(function (cid) {
         return "「" + s.clues.find(function (c) { return c.id === cid; }).name + "」";
       });
-      if (names.length) guide("新线索入袋：" + names.join("") + "。别只收藏，想想它指向谁。", "talk", "investigate");
+      if (state.collected.length >= s.clues.length && s.clues.length > 0) {
+        guide("……真相渐渐清晰了。线索都齐了，是时候把它们拼起来了。", "talk", "idle");
+      } else if (names.length) guide("新线索入袋：" + names.join("") + "。别只收藏，想想它指向谁。", "talk", "investigate");
       else react(a.type === "search" ? "search" : "talk");
     });
   }

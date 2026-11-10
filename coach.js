@@ -37,6 +37,7 @@
     "5. 错误但合理的联想 → challenge，指出证据不足/跳步。",
     "6. 要答案 → refuse_spoiler，给方向不给答案。",
     "7. 玩家还没收集线索或线索很少时，先提醒他去和人物对话、勘察现场；等他拿到线索后再引导推理。",
+    "8. 当「当前状态」里的 allCluesFound 为 true（线索已集齐）时：不要再提醒玩家去调查；玩家卡住或提问时，改用“线索已经齐了，真相渐渐清晰了”这类语气，温和地把话题引向「真相揭示」，或让他把推理说出来。",
     "",
     "【同行侦探的说话方式】",
     "- 不要用“这条线你抓对了，不过……”这种像老师批改作业的句式；用同行式的反应：“确实如此……奇怪，那……”/“如果真是这样，那……”。",
@@ -81,7 +82,7 @@
     return GENERIC_BEFORE.join("\n") + "\n\n" + caseSection + "\n\n" + GENERIC_AFTER.join("\n");
   }
 
-  function buildMessages(scriptId, coach, history, knownClueIds, statedDeductions, playerText) {
+  function buildMessages(scriptId, coach, history, knownClueIds, statedDeductions, playerText, allCluesFound) {
     const messages = [{ role: "system", content: buildSystemPrompt(coach) }];
     (history || []).slice(-8).forEach(function (m) {
       messages.push({ role: m.role, content: m.content });
@@ -90,6 +91,7 @@
       caseId: scriptId,
       knownClueIds: knownClueIds || [],
       statedDeductionIds: statedDeductions || [],
+      allCluesFound: !!allCluesFound,
       stuckSignal: false
     };
     const user = "【当前状态】\n" + JSON.stringify(stateBlock) + "\n\n【玩家输入】\n" + playerText;
