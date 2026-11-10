@@ -2,6 +2,12 @@
 
 最新的更新写在最上面。每条记录：日期、主要改动、涉及文件。
 
+## 2026-11-10 · 欢迎语三句逐字、点击切换，接入三段音频
+
+- 欢迎语分三句逐字弹出（带对白音效），点「下一句」逐句切换；三句分别播放 `welcome_cut1/2/3.mp3`。
+- 用三段分割音频替换原来的单条 `welcome_v2.mp3`。
+- 涉及文件：`index.html`、`app.js`、`assets/voice/welcome_cut1.mp3`、`assets/voice/welcome_cut2.mp3`、`assets/voice/welcome_cut3.mp3`。
+
 ## 2026-11-10 · 欢迎页按钮层级/尺寸调整，欢迎语改为逐字三段式
 
 - 修复「开始」按钮被灰羽立绘遮挡：`.welcome-actions` 提高 `z-index`，`.welcome-guide` 高度由 112% 改为 100%。

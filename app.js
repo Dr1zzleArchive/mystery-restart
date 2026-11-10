@@ -86,7 +86,14 @@
   let mascotClicks = 0;
   let mascotClickTimer = null;
   let aiBusy = false;
-  let welcomeTyping = false;
+  let welcomeStep = 0;
+  let welcomeFinish = null;
+
+  const WELCOME_LINES = [
+    "欢迎来到谜案重启，我是灰羽。",
+    "在这里，你可以沉浸于每一桩案件，亲自追寻线索，揭开隐藏在真相背后的谜团。",
+    "而我会陪伴在你身边，作为你的助手，协助你完成每一次调查与推理。"
+  ];
 
   function script() {
     return SCRIPTS.find(function (s) { return s.id === state.scriptId; });
@@ -378,7 +385,7 @@
 
   function closeWelcome() {
     if (!welcomeScreen || welcomeScreen.hidden) return;
-    welcomeTyping = false;
+    welcomeFinish = null;
     if (welcomeLine && welcomeLine._typeTimer) {
       window.clearTimeout(welcomeLine._typeTimer);
       welcomeLine._typeTimer = null;
@@ -405,39 +412,46 @@
     if (lede) lede.hidden = false;
     if (dialogue) dialogue.hidden = false;
     if (welcomeLine) welcomeLine.textContent = "";
-    if (welcomeVoice) {
-      try {
-        welcomeVoice.currentTime = 0;
-        welcomeVoice.play();
-      } catch (e) {
-        // Autoplay can be blocked until user gesture; this click counts as a gesture.
-      }
-    }
+    welcomeStep = 0;
+    playWelcomeVoice(0);
+    typeWelcomeLine(0);
     if (welcomeBtn) {
+      welcomeBtn.textContent = "下一句";
+      welcomeBtn.dataset.action = "welcome-next";
+    }
+  }
+
+  function playWelcomeVoice(i) {
+    if (!welcomeVoice) return;
+    try {
+      welcomeVoice.src = "assets/voice/welcome_cut" + (i + 1) + ".mp3";
+      welcomeVoice.currentTime = 0;
+      welcomeVoice.play();
+    } catch (e) {
+      // Autoplay can be blocked until user gesture; this click counts as a gesture.
+    }
+  }
+
+  function typeWelcomeLine(i) {
+    welcomeFinish = window.Dialogue.typeInto(welcomeLine, WELCOME_LINES[i], {
+      voice: "guide",
+      onDone: function () { welcomeFinish = null; }
+    });
+  }
+
+  function welcomeNext() {
+    welcomeStep++;
+    if (welcomeStep < WELCOME_LINES.length) {
+      playWelcomeVoice(welcomeStep);
+      typeWelcomeLine(welcomeStep);
+      if (welcomeStep === WELCOME_LINES.length - 1 && welcomeBtn) {
+        welcomeBtn.textContent = "进入游戏";
+        welcomeBtn.dataset.action = "welcome-continue";
+      }
+    } else if (welcomeBtn) {
       welcomeBtn.textContent = "进入游戏";
       welcomeBtn.dataset.action = "welcome-continue";
     }
-    typeWelcomeLines();
-  }
-
-  function typeWelcomeLines() {
-    const lines = [
-      "欢迎来到谜案重启，我是灰羽。",
-      "在这里，你可以沉浸于每一桩案件，亲自追寻线索，揭开隐藏在真相背后的谜团。",
-      "而我会陪伴在你身边，作为你的助手，协助你完成每一次调查与推理。"
-    ];
-    let i = 0;
-    welcomeTyping = true;
-    function next() {
-      if (!welcomeTyping || i >= lines.length) return;
-      window.Dialogue.typeInto(welcomeLine, lines[i++], {
-        voice: "guide",
-        onDone: function () {
-          window.setTimeout(next, 450);
-        }
-      });
-    }
-    next();
   }
 
   function save() {
@@ -1134,6 +1148,8 @@
       backgroundViewer.hidden = true;
     } else if (action === "welcome-begin") {
       beginWelcome();
+    } else if (action === "welcome-next") {
+      welcomeNext();
     } else if (action === "welcome-continue") {
       closeWelcome();
     } else if (action === "mascot") {
