@@ -2,6 +2,12 @@
 
 最新的更新写在最上面。每条记录：日期、主要改动、涉及文件。
 
+## 2026-11-10 · 文字音效改为单声道，快速点击不再叠音
+
+- `dialogue.js` 的 `blip()` 增加 `activeBlip` 句柄：每次播放新文字音效前，先停止并断开上一个，保证同一时刻只有一个音效在响。
+- 快速点击 / 连续推进对白时不会再出现多个“哔”叠加。
+- 涉及文件：`dialogue.js`。
+
 ## 2026-11-10 · Pages 改用 GitHub Actions 静态部署
 
 - 旧 Jekyll 构建连续报 `Page build failed`，改为 `.github/workflows/pages.yml` 静态部署，并把 Pages 的 build type 切到 `workflow`。

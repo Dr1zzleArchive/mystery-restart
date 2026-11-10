@@ -22,6 +22,7 @@
   let current = null;
   let audioCtx = null;
   let noiseBuffer = null;
+  let activeBlip = null;
   let lastShown = null;  // { name, text, box } of the line on screen, for quoting into the notebook
 
   if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) config.speed = "instant";
@@ -34,12 +35,23 @@
       .replace(/"/g, "&quot;");
   }
 
+  function stopActiveBlip() {
+    if (!activeBlip) return;
+    const b = activeBlip;
+    activeBlip = null;
+    try { b.source.stop(); } catch (e) { /* already stopped */ }
+    try { b.source.disconnect(); } catch (e) { /* already disconnected */ }
+    try { b.gain.disconnect(); } catch (e) { /* already disconnected */ }
+  }
+
   // force: play even when sound is switched off (used by the settings preview button).
   function blip(voice, force) {
     const pitch = VOICES[voice] || VOICES.narr;
     const style = SOUNDS[config.soundStyle] || SOUNDS.beep;
     if ((!config.sound && !force) || config.volume <= 0) return;
     try {
+      // Only one text blip may sound at a time: cut the previous one first.
+      stopActiveBlip();
       audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
       if (audioCtx.state === "suspended") audioCtx.resume();
       const now = audioCtx.currentTime;
@@ -74,6 +86,10 @@
       }
       source.start(now);
       source.stop(now + style.length + 0.01);
+      activeBlip = { source: source, gain: gain };
+      source.onended = function () {
+        if (activeBlip && activeBlip.source === source) activeBlip = null;
+      };
     } catch (e) {
       // Audio is optional.
     }
