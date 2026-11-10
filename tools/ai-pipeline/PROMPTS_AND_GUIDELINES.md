@@ -79,6 +79,7 @@
 | 生成推理题（选择题+填空题+别名表） | `tools/ai-pipeline/04-questions.md` |
 | 复查一个已写好的关卡有没有逻辑漏洞 | `tools/ai-pipeline/05-review.md` |
 | 把案件打包成 data.js + 沉浸提示词 + 真相拼图（标准终点） | `tools/ai-pipeline/06-case-package.md` |
+| 用免费网页 AI 做改编初稿（省 token） | `tools/web-ai-case-pack/WORKFLOW.md` |
 | 检查一个本子 JSON 格式是否正确 | 双击打开 `tools/ai-pipeline/validate.html`，粘贴 JSON |
 | 查本子数据格式的字段说明 | `tools/ai-pipeline/README.md` |
 | 查填空题模糊判定的具体规则 | `tools/ai-pipeline/README.md` 最后一节，或直接看 `judge.js` 源码（很短，70 行） |
