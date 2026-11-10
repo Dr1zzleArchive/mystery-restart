@@ -7,6 +7,12 @@
   const SETTINGS_KEY = "murder_restart_settings_v1";
   const WELCOME_KEY = "murder_restart_welcome_seen_v1";
   const TUTORIAL_KEY = "murder_restart_tutorial_done_v1";
+  // ⚠️ 新手教程已禁用（2026-11-10）。
+  // 原因：浮动引导的「横跳 / 定位」问题尚未解决，体验不稳，故暂时从网页中移除。
+  // 源码全部保留在下方（TUTORIAL_CASE_ID、TUTORIAL_STEPS、renderTutorial 等函数），仅供后续修复参考。
+  // 若要重新启用：把 TUTORIAL_ENABLED 改为 true，并在 renderMenu 里加回「新手教程」入口、
+  // 以及在 welcome-continue 里恢复首次进入自动调用 startTutorial() 的逻辑。
+  const TUTORIAL_ENABLED = false;
 
   const app = document.getElementById("app");
   const mascotImg = document.getElementById("mascotImg");
@@ -598,6 +604,7 @@
   }
 
   function startTutorial() {
+    if (!TUTORIAL_ENABLED) { setPhase("menu"); return; }
     state.tutorialStep = 0;
     state.scriptId = TUTORIAL_CASE_ID;
     resetCase();
@@ -721,7 +728,6 @@
         '<h1>谜案重启</h1>' +
         '<p class="tagline">用轻量剧本杀的方式，把推理文学改造成可互动的网页体验。</p>' +
       '</header>' +
-      '<div class="tutorial-entry"><button class="btn small" type="button" data-action="tutorial-start">新手教程</button></div>' +
       '<section class="intro-strip">' +
         '<div><strong>读一段故事</strong><span>像视觉小说一样，跟着角色的对白进入原著。</span></div>' +
         '<div><strong>亲手搜证</strong><span>询问嫌疑人、勘察现场，把线索收进背包。</span></div>' +
@@ -1295,10 +1301,8 @@
     } else if (action === "close-background-viewer") {
       backgroundViewer.hidden = true;
     } else if (action === "welcome-continue") {
-      let first = false;
-      try { first = localStorage.getItem(TUTORIAL_KEY) !== "1"; } catch (e) { first = true; }
+      // 新手教程已禁用：欢迎页结束后直接进入主菜单。
       closeWelcome();
-      if (first) startTutorial();
     } else if (action === "tutorial-start") {
       startTutorial();
     } else if (action === "tutorial-next") {
