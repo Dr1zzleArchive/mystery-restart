@@ -43,3 +43,7 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+        with:
+          # 默认 10 分钟；GitHub Pages 的 syncing_files 偶发会超过 10 分钟，
+          # 提前中止会把站点卡在 errored 状态。放宽到 20 分钟避免误杀。
+          timeout: 1200000
