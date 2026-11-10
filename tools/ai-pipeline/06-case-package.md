@@ -112,7 +112,7 @@
     { "id": "k1", "surface": "玩家看到的线索信息", "meaning": "这条线索实际意味着什么" }
   ],
   "deductions": [
-    { "id": "D1", "text": "可推出的中间结论", "basis": ["k1", "信在屋里"] }
+    { "id": "D1", "text": "可推出的中间结论", "basis": ["k1", "k6"], "pair": ["k1", "k6"] }
   ],
   "redHerrings": ["误导线索为什么是误导"],
   "finalTruth": "一句话完整真相（玩家拼图前不得泄露）"
@@ -122,20 +122,29 @@
 - clues 与 script.clues 一一对应，surface 是玩家可见信息，meaning 是导演层真实含义。
 - deductions 写 3–6 条中间推理节点，id 依次 D1、D2…；**最终结论固定用 "C1"**。
 - 每条 deduction 的 basis 只能引用 clues 的 id 或 facts 里的短语，不得引用玩家拿不到的线索。
+- **pair 是“线索联想”机制**：给至少 3 条 deduction 写 `pair: ["kA","kB"]`，表示玩家把这两条线索放在一起就能推出该结论。pair 必须是 script.clues 里真实存在的两个线索 id。
 - 最终结论 C1 的文字必须与 script.solution 一致。
 
 ━━ 三、closing（真相拼图，直接作为 script.closing）━━
 {
   "intro": "一句操作提示",
   "segments": [ { "text": "真相是：D 部长把信" }, { "slot": 0 }, { "text": "、重新写上地址……" } ],
-  "slots": [ { "id": 0, "answer": "翻了个面" }, { "id": 1, "answer": "壁炉前" }, { "id": 2, "answer": "最显眼处" } ],
+  "slots": [ { "id": 0, "answer": "翻了个面", "requires": "D1" }, { "id": 1, "answer": "壁炉前", "requires": "D2" }, { "id": 2, "answer": "最显眼处", "requires": "D3" } ],
   "fragments": ["翻了个面", "壁炉前", "最显眼处", "烧掉了", "塞进坐垫", "藏进书里"]
 }
 注意：
 - 空 2–4 个，答案对应“凶手/手法/关键物/地点/动机”等关键节点，答案 2–6 字。
 - segments 用 { "slot": 0 } 标记挖空位置，其余用 { "text": "..." }；填完后整句必须通顺且符合真相。
 - fragments = 所有正确答案 + 4–8 个干扰块；干扰块要“看起来相关但错误”，且不能是任何一个空的正确答案。
+- **requires 是碎片解锁条件**：需要推理才能得出的空写 `requires: "Dx"`；该 deduction 成立后，这个空的正确文字块才会出现在拼图里。纯事实（玩家开场就知道）可以不写 requires。
 - 每个空必须能在 fragments 中找到它的正确答案。
+
+### 线索联想与碎片解锁（每案必须）
+
+- 调查给线索，联想给推理，拼图给结局：玩家选两条已获得的线索，若命中某条 deduction 的 `pair`，该 deduction 成立，并解锁对应 `requires` 的拼图空。
+- 灰羽的对谈也可以成立 deduction（返回 `unlockedDeductionIds`），作为联想之外的另一条路径。
+- 未成立的推理，对应的正确碎片不出现在拼图池里；干扰碎片始终存在。
+- 验收标准：如果玩家不搜证、不联想、不对谈，应该拼不出完整真相。
 ```
 
 ## 输出示例（节选自《失窃的信》）

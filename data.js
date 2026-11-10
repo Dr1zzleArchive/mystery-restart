@@ -236,12 +236,10 @@ window.SCRIPTS = [
         { id: "k9", surface: "劳拉证词：信是斯台普顿教她写的，事后又劝她别去", meaning: "约爵士出来是斯台普顿策划的" }
       ],
       deductions: [
-        { id: "D1", text: "存在一条真实的大型猎犬，猎犬传说是被利用的", basis: ["k1", "k6"] },
-        { id: "D2", text: "查尔斯爵士是被人约到小门边，并在那里被惊吓致死", basis: ["k2", "k4", "k3"] },
-        { id: "D3", text: "猎犬在黑夜里发光，是人为涂了磷光涂料", basis: ["k6"] },
-        { id: "D4", text: "有人想让猎犬认准亨利爵士这个下一个目标", basis: ["k7"] },
-        { id: "D5", text: "斯台普顿是巴斯克维尔家族后代，有夺取爵位的动机", basis: ["k8"] },
-        { id: "D6", text: "把查尔斯爵士约出来是斯台普顿策划的", basis: ["k9"] }
+        { id: "D1", text: "存在一条真实的大型猎犬，并被涂上磷光伪装", basis: ["k1", "k6"], pair: ["k1", "k6"] },
+        { id: "D2", text: "查尔斯爵士是被信约到小门边，并在那里受惊逃跑", basis: ["k2", "k4"], pair: ["k2", "k4"] },
+        { id: "D3", text: "有人偷走亨利爵士的旧靴子，准备让猎犬继续作案", basis: ["k7", "k9"], pair: ["k7", "k9"] },
+        { id: "D4", text: "斯台普顿是巴斯克维尔家族后代，有继承动机，并策划了约见", basis: ["k8", "k9"], pair: ["k8", "k9"] }
       ],
       redHerrings: [
         "k5 管家的烛光：他只是在给逃到沼地的妻弟送饭，与命案无关。",
@@ -269,13 +267,13 @@ window.SCRIPTS = [
         { text: "，准备继续作案。" }
       ],
       slots: [
-        { id: 0, answer: "后代" },
-        { id: 1, answer: "夺取爵位和遗产" },
-        { id: 2, answer: "巨型猎犬" },
-        { id: 3, answer: "磷光涂料" },
-        { id: 4, answer: "地狱猎犬" },
+        { id: 0, answer: "后代", requires: "D4" },
+        { id: 1, answer: "夺取爵位和遗产", requires: "D4" },
+        { id: 2, answer: "巨型猎犬", requires: "D1" },
+        { id: 3, answer: "磷光涂料", requires: "D1" },
+        { id: 4, answer: "地狱猎犬", requires: "D1" },
         { id: 5, answer: "心脏不好" },
-        { id: 6, answer: "旧靴子" }
+        { id: 6, answer: "旧靴子", requires: "D3" }
       ],
       fragments: ["后代", "夺取爵位和遗产", "巨型猎犬", "磷光涂料", "地狱猎犬", "心脏不好", "旧靴子", "亨利爵士", "巴里摩尔", "查尔斯爵士", "普通猎犬", "烛光", "书信"]
     }
@@ -454,11 +452,11 @@ window.SCRIPTS = [
         { id: "k8", surface: "那封脏信的折痕边缘磨损不自然", meaning: "被翻面重封" }
       ],
       deductions: [
-        { id: "D1", text: "信不在隐蔽处，而在明处", basis: ["k1", "信在屋里"] },
-        { id: "D2", text: "信不在身上，在屋内随手可取处", basis: ["k2", "信必须随时可用"] },
-        { id: "D3", text: "卡片架的信与档案处处相反、只有尺寸相同，是刻意伪装", basis: ["k4", "k6"] },
-        { id: "D4", text: "邋遢的信与 D 整洁习惯矛盾，不是普通废信", basis: ["k6", "k7"] },
-        { id: "D5", text: "信纸反折磨损 = 翻面重封", basis: ["k8"] }
+        { id: "D1", text: "D 故意夜不归宿，让警察放心搜查，隐蔽处已排除", basis: ["k1", "k3"], pair: ["k1", "k3"] },
+        { id: "D2", text: "信纸反折磨损，信被翻面重封", basis: ["k6", "k8"], pair: ["k6", "k8"] },
+        { id: "D3", text: "信不在隐蔽处，而在最显眼的卡片架上", basis: ["k1", "k6"], pair: ["k1", "k6"] },
+        { id: "D4", text: "卡片架的信与档案处处相反，是刻意伪装", basis: ["k4", "k6"] },
+        { id: "D5", text: "邋遢的信与 D 整洁习惯矛盾，不是普通废信", basis: ["k6", "k7"] }
       ],
       redHerrings: [
         "书桌上的信堆：全是普通日常信函，无价值。",
@@ -482,11 +480,11 @@ window.SCRIPTS = [
         { text: "。" }
       ],
       slots: [
-        { id: 0, answer: "秘密搜查" },
-        { id: 1, answer: "夜不归宿" },
-        { id: 2, answer: "翻了个面" },
-        { id: 3, answer: "壁炉前" },
-        { id: 4, answer: "最显眼处" }
+        { id: 0, answer: "秘密搜查", requires: "D1" },
+        { id: 1, answer: "夜不归宿", requires: "D1" },
+        { id: 2, answer: "翻了个面", requires: "D2" },
+        { id: 3, answer: "壁炉前", requires: "D3" },
+        { id: 4, answer: "最显眼处", requires: "D3" }
       ],
       fragments: ["秘密搜查", "夜不归宿", "翻了个面", "壁炉前", "最显眼处", "烧掉了", "藏进书里", "塞进坐垫", "带在身上", "放进了抽屉", "撕成两半"]
     }
@@ -648,11 +646,10 @@ window.SCRIPTS = [
         { id: "k8", surface: "开棺验尸见刀伤、酒气", meaning: "杨大成是被灌醉后刀杀，不是暴病" }
       ],
       deductions: [
-        { id: "D1", text: "杨大成不是暴病，而是被杀", basis: ["k2", "k8"] },
-        { id: "D2", text: "珊瑚扇坠从杨大成流到皮熊、柳氏、吕佩", basis: ["k1", "k3", "k4", "k5"] },
-        { id: "D3", text: "皮熊与毕氏私通，有合谋动机", basis: ["k6"] },
-        { id: "D4", text: "皮熊抢答死因，说明他知道杀人真相", basis: ["k7"] },
-        { id: "D5", text: "手法是灌醉后用刀杀死", basis: ["k8"] }
+        { id: "D1", text: "杨大成是被灌醉后刀杀，不是暴病", basis: ["k2", "k8"], pair: ["k2", "k8"] },
+        { id: "D2", text: "皮熊与毕氏合谋，皮熊知道死因", basis: ["k6", "k7"], pair: ["k6", "k7"] },
+        { id: "D3", text: "珊瑚扇坠被皮熊拿走", basis: ["k1", "k5"], pair: ["k1", "k5"] },
+        { id: "D4", text: "扇坠最终流到吕佩手里", basis: ["k3", "k4"], pair: ["k3", "k4"] }
       ],
       redHerrings: [
         "柳氏怨恨丈夫、私赠扇坠，看似可疑，但她只是转手赃物，并未杀杨大成。",
@@ -676,11 +673,11 @@ window.SCRIPTS = [
         { text: "，一路追出通奸与谋杀。" }
       ],
       slots: [
-        { id: 0, answer: "毕氏" },
-        { id: 1, answer: "灌醉" },
-        { id: 2, answer: "心疼病" },
-        { id: 3, answer: "珊瑚扇坠" },
-        { id: 4, answer: "重现" }
+        { id: 0, answer: "毕氏", requires: "D2" },
+        { id: 1, answer: "灌醉", requires: "D1" },
+        { id: 2, answer: "心疼病", requires: "D1" },
+        { id: 3, answer: "珊瑚扇坠", requires: "D3" },
+        { id: 4, answer: "重现", requires: "D4" }
       ],
       fragments: ["毕氏", "灌醉", "心疼病", "珊瑚扇坠", "重现", "柳氏", "吕佩", "匡天佑", "勒死", "毒死", "银两", "失窃"]
     }

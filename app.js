@@ -588,18 +588,34 @@
         '<small>' + (a.type === "talk" ? "对话" : "搜证") + '</small>' +
       '</button>';
     }).join("");
-    const clueItems = s.clues.map(function (c) {
-      const got = state.collected.indexOf(c.id) >= 0;
-      if (!got) return '<li class="locked"><span class="muted">??? 未收集</span></li>';
+
+    const collected = s.clues.filter(function (c) { return state.collected.indexOf(c.id) >= 0; });
+    const clueItems = collected.map(function (c) {
       return '<li class="got"><span><strong>' + escapeHtml(c.name) + '</strong> - ' + escapeHtml(c.text) + '</span>' +
         '<button type="button" class="clue-note" data-nb-note="' + escapeHtml("【线索】" + c.name + "：" + c.text) + '" title="记入笔记" aria-label="把线索“' + escapeHtml(c.name) + '”记入笔记">＋笔记</button></li>';
     }).join("");
+    const clueBody = collected.length
+      ? '<ul class="clue-list">' + clueItems + '</ul>'
+      : '<p class="muted">还没有线索。先去调查行动里问一问、查一查。</p>';
+
+    const linkOptions = collected.map(function (c) {
+      return '<option value="' + escapeHtml(c.id) + '">' + escapeHtml(c.name) + '</option>';
+    }).join("");
+    const deductions = (s.coach && s.coach.deductions) || [];
+    const established = deductions.filter(function (d) { return state.statedDeductions.indexOf(d.id) >= 0; });
+    const establishedHtml = established.length
+      ? '<ul class="clue-list">' + established.map(function (d) { return '<li class="got"><span>' + escapeHtml(d.text) + '</span></li>'; }).join("") + '</ul>'
+      : '<p class="muted">还没有成立的推理。选两条线索，试着把它们连起来。</p>';
+    const linkBody = collected.length >= 2
+      ? '<div class="link-row"><select id="linkA" aria-label="第一条线索">' + linkOptions + '</select><span>+</span><select id="linkB" aria-label="第二条线索">' + linkOptions + '</select><button class="btn small primary" type="button" data-action="link">联想</button></div>'
+      : '<p class="muted">至少需要两条线索才能联想。</p>';
+
     const chatHtml = state.aiChat.map(function (m) {
       const who = m.role === "user" ? "你" : "灰羽";
       return '<div class="immerse-msg ' + (m.role === "user" ? "user" : "guide") + '"><span class="immerse-who">' + who + '</span><p>' + escapeHtml(m.content) + '</p></div>';
     }).join("");
     const empty = (!state.aiChat.length && !aiBusy)
-      ? '<p class="muted">先去和人物对话、勘察现场，把线索收进背包；想清楚后，把你的推理写给我。</p>'
+      ? '<p class="muted">先去和人物对话、勘察现场，把线索收进背包；想清楚后，可以把两条线索放在一起联想，或者把你的推理写给我。</p>'
       : "";
     const thinking = aiBusy ? '<div class="immerse-msg guide thinking"><span class="immerse-who">灰羽</span><p><em>……我在想。</em></p></div>' : "";
     app.innerHTML =
@@ -607,7 +623,10 @@
         '<p class="muted">已收集线索：' + state.collected.length + '/' + s.clues.length + '</p></header>' +
       '<div id="vnHost" class="vn-host"></div>' +
       '<section class="panel"><h3>调查行动</h3><div class="action-grid">' + actionBtns + '</div></section>' +
-      '<section class="panel"><h3>线索背包</h3><ul class="clue-list">' + clueItems + '</ul></section>' +
+      '<section class="panel"><h3>线索背包（' + collected.length + '）</h3>' + clueBody + '</section>' +
+      '<section class="panel"><h3>线索联想</h3>' + linkBody +
+        '<h4>已成立的推理</h4>' + establishedHtml +
+      '</section>' +
       '<section class="panel immerse-panel"><h3>推理对谈</h3>' +
         '<div id="immerseChat" class="immerse-chat" aria-live="polite">' + empty + chatHtml + thinking + '</div>' +
         '<div class="immerse-input">' +
@@ -621,6 +640,35 @@
       '<div class="actions"><button class="btn" data-action="intro">重看开场</button><button class="btn" data-action="menu">返回选关</button></div>';
   }
 
+  function matchPair(pair, a, b) {
+    return Array.isArray(pair) && ((pair[0] === a && pair[1] === b) || (pair[0] === b && pair[1] === a));
+  }
+
+  function tryLink() {
+    const aEl = document.getElementById("linkA");
+    const bEl = document.getElementById("linkB");
+    const a = aEl ? aEl.value : "";
+    const b = bEl ? bEl.value : "";
+    if (!a || !b || a === b) {
+      guide("选两条不同的线索，才能联想。", "thinking", "thinking");
+      return;
+    }
+    const deductions = (script().coach && script().coach.deductions) || [];
+    const hit = deductions.find(function (d) { return matchPair(d.pair, a, b); });
+    if (!hit) {
+      guide("这两条线索还连不到一起。再想想它们各自说明了什么。", "unimpressed", "unimpressed");
+      return;
+    }
+    if (state.statedDeductions.indexOf(hit.id) >= 0) {
+      guide("这条你已经推出来了。", "thinking", "thinking");
+      return;
+    }
+    state.statedDeductions.push(hit.id);
+    save();
+    renderImmerse();
+    guide("……" + hit.text + "。这条推理成立了。", "neutral", "idle");
+  }
+
   function shuffle(arr) {
     const out = arr.slice();
     for (let i = out.length - 1; i > 0; i--) {
@@ -628,6 +676,21 @@
       const tmp = out[i]; out[i] = out[j]; out[j] = tmp;
     }
     return out;
+  }
+
+  function slotRequires(s, slot) {
+    return slot && slot.requires ? slot.requires : "";
+  }
+
+  function slotUnlocked(s, slot) {
+    const req = slotRequires(s, slot);
+    return !req || state.statedDeductions.indexOf(req) >= 0;
+  }
+
+  function closingSlot(s, slotId) {
+    const c = s.closing;
+    if (!c) return null;
+    return c.slots.find(function (x) { return String(x.id) === String(slotId); }) || null;
   }
 
   function renderClosing() {
@@ -642,6 +705,10 @@
     }
     const segHtml = c.segments.map(function (seg) {
       if (seg.slot != null) {
+        const slot = closingSlot(s, seg.slot);
+        if (!slotUnlocked(s, slot)) {
+          return '<span class="closing-slot locked" title="需要先推出对应的推理">🔒</span>';
+        }
         const placed = state.closingPlaced[seg.slot];
         let cls = "closing-slot";
         if (placed) cls += " filled";
@@ -650,16 +717,33 @@
       }
       return '<span class="closing-text">' + escapeHtml(seg.text) + '</span>';
     }).join("");
+
     const used = {};
     Object.keys(state.closingPlaced).forEach(function (k) { used[state.closingPlaced[k]] = true; });
-    const frags = shuffle(c.fragments).filter(function (f) { return !used[f]; }).map(function (f) {
+    const allAnswers = {};
+    const unlockedAnswers = {};
+    c.slots.forEach(function (slot) {
+      allAnswers[slot.answer] = true;
+      if (slotUnlocked(s, slot)) unlockedAnswers[slot.answer] = true;
+    });
+    const frags = shuffle(c.fragments).filter(function (f) {
+      if (used[f]) return false;
+      if (allAnswers[f] && !unlockedAnswers[f]) return false;
+      return true;
+    }).map(function (f) {
       const selected = state.closingSelected === f ? " selected" : "";
       return '<button class="closing-frag' + selected + '" type="button" draggable="true" data-frag="' + escapeHtml(f) + '">' + escapeHtml(f) + '</button>';
     }).join("");
+
+    const lockedCount = c.slots.filter(function (slot) { return !slotUnlocked(s, slot); }).length;
+    const lockHint = lockedCount
+      ? '<p class="muted">还有 ' + lockedCount + ' 处需要先在「线索联想」或对谈里推出对应推理，才能解锁。已成立推理：' + state.statedDeductions.length + ' 条。</p>'
+      : "";
+
     app.innerHTML =
       '<header class="screen-header"><p class="eyebrow">真相揭示 · ' + escapeHtml(s.title) + '</p><h2>拼出真相</h2>' +
         '<p class="muted">' + escapeHtml(c.intro || "把真相的关键拼起来。") + '</p></header>' +
-      '<section class="panel"><h3>真相还原</h3><p class="closing-sentence">' + segHtml + '</p>' +
+      '<section class="panel"><h3>真相还原</h3>' + lockHint + '<p class="closing-sentence">' + segHtml + '</p>' +
         '<p class="closing-tray-label muted">文字块：点击选中，再点缺口放入；也可以直接拖动。</p>' +
         '<div class="closing-tray">' + frags + '</div></section>' +
       '<div class="actions"><button class="btn primary" data-action="closing-check">检查真相</button><button class="btn" data-action="closing-back">返回对谈</button><button class="btn" data-action="menu">返回选关</button></div>';
@@ -700,6 +784,9 @@
 
   function placeFragment(slotId, text) {
     if (text == null || text === "") return;
+    const s = script();
+    const slot = closingSlot(s, slotId);
+    if (!slot || !slotUnlocked(s, slot)) return;
     state.closingPlaced[slotId] = text;
     state.closingSelected = null;
     state.closingChecked = false;
@@ -713,6 +800,12 @@
   }
 
   function tapSlot(slotId) {
+    const s = script();
+    const slot = closingSlot(s, slotId);
+    if (!slot || !slotUnlocked(s, slot)) {
+      guide("这个空还没解锁。先去「线索联想」或对谈里把对应推理推出来。", "thinking", "thinking");
+      return;
+    }
     if (state.closingPlaced[slotId]) { clearSlot(slotId); return; }
     if (state.closingSelected) placeFragment(slotId, state.closingSelected);
   }
@@ -721,6 +814,11 @@
     const s = script();
     const c = s.closing;
     if (!c) return;
+    const locked = c.slots.filter(function (slot) { return !slotUnlocked(s, slot); });
+    if (locked.length) {
+      guide("还有 " + locked.length + " 处推理没成立。先去「线索联想」或对谈里把它们推出来。", "thinking", "thinking");
+      return;
+    }
     const allFilled = c.slots.every(function (slot) { return state.closingPlaced[slot.id]; });
     if (!allFilled) {
       guide("还有空没填。把所有文字块都放进去，再检查。", "thinking", "thinking");
@@ -1084,6 +1182,8 @@
     } else if (action === "investigate") {
       setPhase("immerse");
       guide("先把能问的问一遍、能查的查一遍。线索到手，我们再聊推理。", "talk", "thinking");
+    } else if (action === "link") {
+      tryLink();
     } else if (action === "immerse-send") {
       submitImmerse();
     } else if (action === "immerse-closing") {
