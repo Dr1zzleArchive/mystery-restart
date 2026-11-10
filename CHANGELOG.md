@@ -2,6 +2,14 @@
 
 最新的更新写在最上面。每条记录：日期、主要改动、涉及文件。
 
+## 2026-11-10 · 新增网页 AI 改编工作流（省 token 版）
+
+- 新增 `tools/web-ai-case-pack/`：`WORKFLOW.md`（两步流程、文件清单、书目建议）、`STEP1_DESIGN.md`（案件设计提示词）、`STEP2_PACKAGE.md`（成品 JSON 提示词）、`EXAMPLE.json`（格式示例）。
+- 用途：把原著片段交给免费网页 AI 做改编初稿，再把结果交回 Codex 校验、接入 `data.js`、测试和上线；只上传片段，不上传整本书。
+- 推荐下一步：`The Problem of Cell 13`（短篇、单场景、公有领域）、`莫格街凶杀案`（经典密室、公有领域）；《黄色房间的秘密》可取一段改编；《半七捕物帐》需注意中文译本版权。
+- 在 `PROMPTS_AND_GUIDELINES.md` 增加了索引，`06-case-package.md` 顶部增加了入口提示。
+- 涉及文件：新增 `tools/web-ai-case-pack/*`；修改 `tools/ai-pipeline/PROMPTS_AND_GUIDELINES.md`、`tools/ai-pipeline/06-case-package.md`。
+
 ## 2026-11-10 · 修正拼图锁定逻辑：锁正确线索，不锁空位
 
 - 新增线索池模型 `closing.clues`：`initial: true` 是开局迷惑线索；`requires: "Dx"` 是推理成立后才出现的线索（每组 2–3 条，至少含 1 条正确线索）。
