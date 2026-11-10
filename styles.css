@@ -2789,7 +2789,7 @@ body.tutorial-mode .guide-panel {
 
 .tutorial-guide img {
   width: clamp(160px, 26vw, 340px);
-  max-height: 62vh;
+  height: clamp(200px, 42vh, 460px);
   object-fit: contain;
 }
 
