@@ -1217,7 +1217,7 @@ h3 {
   position: relative;
   height: min(46vh, 470px);
   min-height: 300px;
-  margin: 12px auto -8px;
+  margin: 12px auto 0;
 }
 
 .welcome-halo {
@@ -1236,7 +1236,7 @@ h3 {
 .welcome-guide {
   position: relative;
   z-index: 1;
-  height: 112%;
+  height: 100%;
   max-width: 92%;
   object-fit: contain;
   animation: guide-float 4.5s ease-in-out infinite;
@@ -1281,6 +1281,8 @@ h3 {
 }
 
 .welcome-actions {
+  position: relative;
+  z-index: 3;
   display: flex;
   align-items: center;
   justify-content: center;

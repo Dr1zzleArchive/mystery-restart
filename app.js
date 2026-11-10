@@ -86,6 +86,7 @@
   let mascotClicks = 0;
   let mascotClickTimer = null;
   let aiBusy = false;
+  let welcomeTyping = false;
 
   function script() {
     return SCRIPTS.find(function (s) { return s.id === state.scriptId; });
@@ -377,6 +378,11 @@
 
   function closeWelcome() {
     if (!welcomeScreen || welcomeScreen.hidden) return;
+    welcomeTyping = false;
+    if (welcomeLine && welcomeLine._typeTimer) {
+      window.clearTimeout(welcomeLine._typeTimer);
+      welcomeLine._typeTimer = null;
+    }
     try {
       localStorage.setItem(WELCOME_KEY, "1");
     } catch (e) {
@@ -398,6 +404,7 @@
     const dialogue = document.querySelector(".welcome-dialogue");
     if (lede) lede.hidden = false;
     if (dialogue) dialogue.hidden = false;
+    if (welcomeLine) welcomeLine.textContent = "";
     if (welcomeVoice) {
       try {
         welcomeVoice.currentTime = 0;
@@ -410,6 +417,27 @@
       welcomeBtn.textContent = "进入游戏";
       welcomeBtn.dataset.action = "welcome-continue";
     }
+    typeWelcomeLines();
+  }
+
+  function typeWelcomeLines() {
+    const lines = [
+      "欢迎来到谜案重启，我是灰羽。",
+      "在这里，你可以沉浸于每一桩案件，亲自追寻线索，揭开隐藏在真相背后的谜团。",
+      "而我会陪伴在你身边，作为你的助手，协助你完成每一次调查与推理。"
+    ];
+    let i = 0;
+    welcomeTyping = true;
+    function next() {
+      if (!welcomeTyping || i >= lines.length) return;
+      window.Dialogue.typeInto(welcomeLine, lines[i++], {
+        voice: "guide",
+        onDone: function () {
+          window.setTimeout(next, 450);
+        }
+      });
+    }
+    next();
   }
 
   function save() {
