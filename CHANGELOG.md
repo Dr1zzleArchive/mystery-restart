@@ -2,6 +2,13 @@
 
 最新的更新写在最上面。每条记录：日期、主要改动、涉及文件。
 
+## 2026-11-10 · Pages 改用 GitHub Actions 静态部署
+
+- 旧 Jekyll 构建连续报 `Page build failed`，改为 `.github/workflows/pages.yml` 静态部署，并把 Pages 的 build type 切到 `workflow`。
+- 工作流只把 `index.html`、`styles.css`、根目录 `*.js` 和 `assets/` 打包上线，绕开 Jekyll。
+- 线上已验证返回 200，且线上 `app.js` 已包含新版“线索联想”代码。
+- 涉及文件：新增 `.github/workflows/pages.yml`。
+
 ## 2026-11-10 · 线索背包逐条获得；新增“线索联想”与推理门控的真相拼图
 
 - 线索背包不再显示“??? 未收集”占位：初始为空，调查一个才出现一个。
