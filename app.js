@@ -12,6 +12,9 @@
   const mascotImg = document.getElementById("mascotImg");
   const guideFullbody = document.getElementById("guideFullbody");
   const bubble = document.getElementById("guideBubble");
+  const tutorialGuide = document.getElementById("tutorialGuide");
+  const tutorialGuideImg = document.getElementById("tutorialGuideImg");
+  const tutorialBubble = document.getElementById("tutorialBubble");
   const welcomeScreen = document.getElementById("welcomeScreen");
   const welcomeLine = document.getElementById("welcomeLine");
   const welcomeGuide = document.getElementById("welcomeGuide");
@@ -160,6 +163,17 @@
     setFullbody(pose || "idle");
   }
 
+  function guideTutorial(text, pose) {
+    if (tutorialBubble && tutorialBubble.dataset.text !== text) {
+      tutorialBubble.dataset.text = text;
+      window.Dialogue.typeInto(tutorialBubble, text, { voice: "guide" });
+    }
+    if (tutorialGuideImg && MASCOT.fullbodies) {
+      const src = MASCOT.fullbodies[pose] || MASCOT.fullbodies.idle;
+      if (src) tutorialGuideImg.src = src;
+    }
+  }
+
   function pickLine(key, lines) {
     // Avoid repeating the same line twice in a row.
     let index = Math.floor(Math.random() * lines.length);
@@ -177,6 +191,7 @@
   }
 
   function pokeMascot() {
+    if (state.phase === "tutorial") return;
     // Clicking repeatedly within a short window escalates the reaction.
     mascotClicks++;
     window.clearTimeout(mascotClickTimer);
@@ -536,16 +551,57 @@
     document.querySelectorAll(".tutorial-hint").forEach(function (el) { el.classList.remove("tutorial-hint"); });
   }
 
+  function showTutorialGuide() {
+    document.body.classList.add("tutorial-mode");
+    if (tutorialGuide) tutorialGuide.hidden = false;
+  }
+
+  function hideTutorialGuide() {
+    document.body.classList.remove("tutorial-mode");
+    if (tutorialGuide) tutorialGuide.hidden = true;
+  }
+
+  function tutorialTarget(step) {
+    if (step && step.hint && step.hint.length) {
+      const el = document.querySelector(step.hint[0]);
+      if (el) return el;
+    }
+    return document.querySelector(".tutorial-controls") || document.getElementById("app");
+  }
+
+  function positionTutorialGuide(step) {
+    if (!tutorialGuide) return;
+    const target = tutorialTarget(step);
+    if (!target) return;
+    const r = target.getBoundingClientRect();
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const gW = 220;
+    const gH = 260;
+    const rightSide = (r.left + r.width / 2) > vw / 2;
+    let left = rightSide ? (r.left - gW - 14) : (r.right + 14);
+    let top = r.top + r.height / 2 - gH / 2;
+    left = Math.max(8, Math.min(vw - gW - 8, left));
+    top = Math.max(8, Math.min(vh - gH - 8, top));
+    tutorialGuide.style.left = left + "px";
+    tutorialGuide.style.top = top + "px";
+    tutorialGuide.style.right = "auto";
+    tutorialGuide.style.bottom = "auto";
+    tutorialGuide.style.transform = "none";
+  }
+
   function startTutorial() {
     state.tutorialStep = 0;
     state.scriptId = TUTORIAL_CASE_ID;
     resetCase();
+    showTutorialGuide();
     setPhase("tutorial");
   }
 
   function finishTutorial() {
     try { localStorage.setItem(TUTORIAL_KEY, "1"); } catch (e) { /* ignore */ }
     clearTutorialHints();
+    hideTutorialGuide();
     state.scriptId = null;
     resetCase();
     setPhase("menu");
@@ -601,7 +657,7 @@
     const step = TUTORIAL_STEPS[state.tutorialStep];
     if (!step) { finishTutorial(); return; }
     clearTutorialHints();
-    guide(step.t, "talk", (step.panel === "deduce" || step.panel === "closing") ? "thinking" : "idle");
+    guideTutorial(step.t, (step.panel === "deduce" || step.panel === "closing") ? "thinking" : "idle");
 
     if (step.hint) {
       step.hint.forEach(function (sel) {
@@ -625,6 +681,7 @@
         '<button class="btn primary" type="button" data-action="tutorial-next">继续</button>' +
         '<button class="btn" type="button" data-action="tutorial-skip">跳过教程</button>' +
       '</div>';
+    positionTutorialGuide(step);
   }
 
   function renderMenu() {
