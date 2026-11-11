@@ -861,14 +861,30 @@
       });
   }
 
+  // Only allow “all clues found” wording when every clue is actually collected.
+  function sanitizeAllCluesClaim(text) {
+    if (state.collected.length >= script().clues.length) return text;
+    const bad = /线索[^。！？!?]{0,10}(齐|够|全)|真相就在眼前|可以开始拼/;
+    if (!bad.test(text)) return text;
+    const parts = text.split(/([。！？!?])/);
+    let kept = "";
+    for (let i = 0; i < parts.length; i += 2) {
+      const sentence = parts[i] + (parts[i + 1] || "");
+      if (!bad.test(sentence)) kept += sentence;
+    }
+    kept = kept.trim();
+    return kept || "还差几条线索没找到，先别急着收网，把你手里的线索再对一对。";
+  }
+
   function handleImmerseReply(parsed) {
-    const reply = String(parsed.reply == null ? "" : parsed.reply).trim();
+    let reply = String(parsed.reply == null ? "" : parsed.reply).trim();
     aiBusy = false;
     if (!reply || /^[\u2026\u3002.\u22ef\u30fb\uff5e~]+$/.test(reply)) {
       renderImmerse();
       guide("……我刚才没接上话。你换个说法，或者说得更具体一点，我再陪你推。", "unimpressed", "unimpressed");
       return;
     }
+    reply = sanitizeAllCluesClaim(reply);
     state.aiChat.push({ role: "assistant", content: reply });
     const newIds = (parsed.unlockedDeductionIds || []).filter(function (id) {
       return state.statedDeductions.indexOf(id) < 0;
