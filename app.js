@@ -685,6 +685,8 @@
         '</div>' +
       '</section>' +
       '<div class="actions"><button class="btn" data-action="intro">重看开场</button><button class="btn" data-action="menu">返回选关</button></div>';
+    const chat = document.getElementById("immerseChat");
+    if (chat) chat.scrollTop = chat.scrollHeight;
   }
 
   function shuffle(arr) {
