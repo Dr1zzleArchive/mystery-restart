@@ -2,6 +2,18 @@
 
 最新的更新写在最上面。版本号遵循 `vMAJOR.MINOR.PATCH`，规范见 `AGENTS.md`。
 
+## [v0.2.0] - 2026-11-11
+
+### Added
+
+- 新增腾讯云 COS 国内部署通道：`.github/workflows/cos.yml` 在 push 到 `main` 或手动触发时，自动构建静态站并同步到 COS。
+- 新增 `deploy/COS_SETUP.md`：建桶、开静态网站、创建 CAM 密钥、配置 GitHub Secrets、验证的完整步骤。
+- 新增 `deploy/build.ps1`：本地一键生成可上传到 COS / EdgeOne 的 `_site` 包，只复制 git 跟踪的站点文件。
+
+### Changed
+
+- `.gitignore` 忽略本地构建目录 `/_site/`。
+
 ## [v0.1.2] - 2026-11-11
 
 ### Fixed

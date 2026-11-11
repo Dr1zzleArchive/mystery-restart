@@ -9,3 +9,6 @@
 /assets/audio/*
 !/assets/audio/web/
 !/assets/audio/web/**
+
+# 本地构建的静态站点包（deploy/build.ps1 生成）
+/_site/
