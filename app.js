@@ -864,7 +864,7 @@
   // Only allow “all clues found” wording when every clue is actually collected.
   function sanitizeAllCluesClaim(text) {
     if (state.collected.length >= script().clues.length) return text;
-    const bad = /线索[^。！？!?]{0,10}(齐|够|全)|真相就在眼前|可以开始拼/;
+    const bad = /线索[^。！？!?]{0,12}(齐|够|全)|真相就在眼前|可以.{0,10}(拼|解)|剩下.{0,8}(拼|解)|该收网|该推理|该总结/;
     if (!bad.test(text)) return text;
     const parts = text.split(/([。！？!?])/);
     let kept = "";
